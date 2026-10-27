@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://script.google.com https://script.googleusercontent.com; img-src data: blob:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<script>window.SZ_API='https://script.google.com/macros/s/AKfycbzsZfbboeArL3dR2MPs_D_qSw7E03vnzgrensgrNXNWbv71YMdCOGqDBAsX0mDiieMoIA/exec'</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Решения Созвездия</title>
+<meta name="color-scheme" content="light">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('dc-theme')==='dark'?'dark':'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Roboto:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{
+  /* Палитра «Созвездия» (как в NPS-отчёте) + серии графиков из проверенной категориальной палитры */
+  color-scheme:light;
+  --bg:#FFFFFF;--surface:#FFFFFF;--surface2:#F7F7F7;--ink:#111111;--ink2:#38434D;--muted:#66727D;--line:#D5E3EC;
+  --navy:#103A60;--aqua:#00B9E7;--orange:#F16522;--link:#00799B;--accent:#103A60;--accent-soft:#EDF2F6;
+  --good:#17804D;--good-soft:#E4F2EA;--warn:#B05E00;--warn-soft:#FBEEDD;--bad:#C93333;--bad-soft:#FBE7E7;
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s1-soft:#cde2fb;
+  --display:"Montserrat","Roboto",Arial,sans-serif;--body:"Roboto",Arial,"Segoe UI",sans-serif;
+}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#0A1A2B;--surface:#0F2438;--surface2:#16304A;--ink:#EAF1F6;--ink2:#B7C6D3;--muted:#8799A9;--line:#23405C;
+  --navy:#7FB3DD;--aqua:#00B9E7;--orange:#F47A44;--link:#4FC8EC;--accent:#5CC4EA;--accent-soft:#16344D;
+  --good:#3CC08A;--good-soft:#123A2C;--warn:#F0A13C;--warn-soft:#3A2A14;--bad:#F06A6A;--bad-soft:#3E1D22;
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s1-soft:#1c3f66;}
+html,body{background:var(--bg);max-width:100%}
+html{overflow-x:hidden}body{overflow-x:hidden;overflow-x:clip}   /* clip, а не hidden: hidden у body ломает прилипание вкладок и заголовков таблиц */
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink2);font:14px/1.45 var(--body);font-variant-numeric:tabular-nums}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 20px 130px}   /* снизу — место под кнопки «Назад» и «Наверх» */
+@media (max-width:560px){.wrap{padding:16px 16px 130px}}
+/* Шапка — как в NPS-отчёте: полоса бренда, название, «Данные на …» и значки справа, легенда уровней */
+.wrap::before{content:"";display:block;height:4px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,var(--navy) 0 60%,var(--aqua) 60% 85%,var(--orange) 85%);margin:-20px 0 18px}
+@media (max-width:560px){.wrap::before{margin-top:-16px}}
+header.top{display:grid;grid-template-columns:1fr auto;grid-template-areas:"title refresh" "legend legend";align-items:start;row-gap:6px;margin-bottom:18px}
+.brand{display:contents}
+.brand h1{grid-area:title;font:600 22px/1.2 var(--display);color:var(--navy);margin:0;text-wrap:balance;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand h1 .h1-sub{font:500 14px/1.2 var(--body);color:var(--muted);padding-left:12px;border-left:3px solid var(--orange)}
+/* Справка об объёме данных — в подвале, между «Качеством данных» и «Как считается» */
+footer.method .ref-info{margin:0 0 20px;padding:12px 16px;border-radius:10px;background:var(--surface2);color:var(--ink2);font-size:13px;line-height:1.5}
+footer.method .ref-info b{font-weight:600;color:var(--ink)}
+header.top .refresh{grid-area:refresh;justify-content:flex-end;padding-top:4px}
+header.top .legend-zones{grid-area:legend}
+.legend-zones{display:flex;flex-wrap:wrap;gap:8px}
+.m-only{display:none}
+@media (max-width:760px){header.top{grid-template-columns:1fr;grid-template-areas:"title" "refresh" "legend"}
+  header.top .refresh{justify-content:flex-start;padding-top:0;margin-bottom:6px;gap:4px}}
+/* До 760 px (телефон и узкое окно Telegram): все действия — в строке названия, размер кнопок — от ширины экрана */
+@media (max-width:760px){
+  .brand h1{flex-wrap:wrap;justify-content:space-between;gap:2px 12px;min-width:0}
+  /* фраза-смысл — второй строкой под названием и кнопками (С4, ревью 17.10) */
+  .brand h1 .h1-sub{order:3;flex:1 0 100%;padding:0;border:0;font-size:12.5px;line-height:1.3;white-space:normal}
+  .brand h1 .h1-title{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  /* Кнопка обновления ужимается по месту: «Обновить данные» → «Обновить» → кружок со стрелкой (класс ставит fitHeader) */
+  .js-refresh-m .t-short,.js-refresh-m .t-icon{display:none}
+  .m-actions.fit-short .js-refresh-m .t-full,.m-actions.fit-icon .js-refresh-m .t-full,.m-actions.fit-icon .js-refresh-m .t-short{display:none}
+  .m-actions.fit-short .js-refresh-m .t-short{display:inline}
+  .m-actions.fit-icon .js-refresh-m .t-icon{display:block;width:1.4em;height:1.4em}
+  .m-actions.fit-icon .js-refresh-m{width:2.7em;padding:0;justify-content:center;border-radius:50%}
+  .m-actions.fit-icon .btn.icon-btn.js-theme,.m-actions.fit-icon .btn.icon-btn.js-fs{border-radius:50%}
+  .js-refresh-m.busy .t-icon{animation:sp 1s linear infinite}
+  /* Телефон: «Обновить данные» и тема — рядом в строке заголовка, одной высоты; размеры в em — растут вместе с масштабом шрифта */
+  .brand h1 .m-actions{display:inline-flex;align-items:center;gap:.45em;flex:none;font:500 clamp(12px,3.6vw,15px)/1 var(--body)}
+  header.top .refresh #btn-fs{display:none}
+  .m-actions .btn{font:inherit;height:2.7em;padding:0 1em;background:var(--surface);background:color-mix(in srgb,var(--surface) 55%,transparent);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);border-radius:8px;display:inline-flex;align-items:center;white-space:nowrap}
+  .m-actions .btn.icon-btn{width:2.7em;height:2.7em;padding:0;justify-content:center;background:var(--surface);background:color-mix(in srgb,var(--surface) 55%,transparent);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);border-radius:8px}
+  .m-actions .btn.icon-btn svg{width:1.4em;height:1.4em}
+  header.top .refresh #btn-theme{display:none}
+  header.top .refresh #btn-refresh{display:none}header.top .refresh #stamp{flex:1 1 auto}}
+@media (max-width:560px){.legend-zones{display:grid;grid-template-columns:1fr 1fr}.legend-zones .pill{justify-content:center;padding:4px 8px}}
+.refresh{display:flex;align-items:center;gap:10px;font-size:12.5px;flex-wrap:wrap}
+.btn{font:500 13px var(--body);color:var(--accent);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+.btn:disabled{opacity:.55;cursor:progress}
+.btn.icon-btn{display:inline-grid;place-items:center;width:34px;height:34px;padding:0;border:0;background:transparent;border-radius:50%;line-height:0}
+.btn.icon-btn svg{display:block;width:18px;height:18px}
+.zoom{display:inline-flex;align-items:center;gap:0}.zoom .icon-btn{font:600 18px/1 var(--body);color:var(--accent)}
+.btn.zoom-val{border:0;background:transparent;padding:6px 4px;min-width:46px;font-variant-numeric:tabular-nums}
+@media (max-width:560px){.zoom{display:none}}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:grid;grid-auto-flow:column;grid-auto-columns:max-content;justify-content:start;gap:4px;padding-block:8px;border-bottom:1px solid var(--line);margin-bottom:16px}
+nav.tabs button{font:600 13.5px var(--display);min-height:40px;color:var(--ink2);background:none;border:1px solid transparent;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+nav.tabs button:hover{background:var(--surface2)}
+nav.tabs button[aria-selected="true"]{background:var(--navy);color:#FFFFFF}
+nav.tabs button:focus:not(:focus-visible){outline:none}
+@media (min-width:761px){nav.tabs{display:flex;flex-wrap:wrap;align-items:center}
+  .nav-f{display:none;margin-left:auto;padding-left:20px;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px 8px;max-width:100%}   /* 20px — зазор до вкладок; не помещается — переносится */body.pinned .nav-f{display:flex}
+  .nav-f .seg{min-height:0;padding:2px}nav.tabs .nav-f .seg button{font:500 13px var(--body);min-height:32px;border:0}
+  nav.tabs .nav-f .seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+  .nav-f select{padding:0 28px 0 10px;background-position:right 9px center;box-sizing:border-box}   /* в прилипшей строке списки мельче — отступы пропорционально меньше */
+  .nav-f select{height:36px;width:180px;font-size:13px}.nav-f>.seg{height:36px;box-sizing:border-box}.nav-f>.seg button{min-height:0;height:100%}   /* год и суда — одна высота */nav.tabs .nav-f .fleet-all{margin:0;height:36px;min-height:0;font:600 16px/1 var(--body);color:var(--accent);padding:0 11px;border:1px solid var(--line)}
+  nav.tabs .nav-f .seg button{padding:0 7px}
+  body.pinned nav.tabs>button{padding:8px 9px}}   /* прилипшая строка: вкладки чуть плотнее, чтобы фильтры встали в ту же строку (до ~1200 px) */
+.nav-f{display:none}
+@media (min-width:761px){nav.tabs.split>.pinned-f,nav.tabs.split>#filters,nav.tabs.split>.nav-f{flex-basis:100%;margin-left:0;justify-content:flex-end}   /* вкладки в несколько строк — фильтры своей строкой */}
+/* вкладки с фильтрами не помещаются в одну строку — 60 на 40 (23.10.2026): слева вкладки (60 %) (переносятся, до двух строк),
+   справа фильтры на 40 % ширины (тоже до двух строк), капсулы делят её поровну; вкладкам мало двух строк — .split */
+@media (min-width:761px){nav.tabs.split2{padding-right:40%;min-height:calc(var(--fh,0px) + 16px);box-sizing:border-box;align-content:center}
+  nav.tabs.split2>.nav-f{position:absolute;right:0;top:50%;transform:translateY(-50%);width:calc(40% - 16px);max-width:none;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:6px 8px}
+  nav.tabs:is(.split,.split2)>.nav-f>.seg{flex:1 1 calc(50% - 4px);min-width:0;display:flex}nav.tabs:is(.split,.split2)>.nav-f>.seg button{flex:1 1 0}
+  nav.tabs:is(.split,.split2)>.nav-f select{flex:1 1 calc(50% - 4px);width:auto;min-width:0}nav.tabs:is(.split,.split2)>.nav-f .fleet-all{flex:none;margin:0}nav.tabs:is(.split,.split2)>.nav-f:has(.fleet-all)>.seg{flex-basis:100%}   /* выбран теплоход: год — первой строкой, суда и «весь флот» — второй, на ту же ширину */
+  nav.tabs.split>.nav-f{flex-basis:auto;width:max(40%,420px);max-width:100%;margin-left:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:6px 8px}   /* запасной вариант: фильтры своей строкой, справа на 40 % */
+  /* пропорции как в Яндекс Метрике: капсулы 36 px, скругление 12, промежуток 8; капсула не ужимается меньше подписи — переносится строкой ниже */
+  nav.tabs:is(.split,.split2)>.nav-f{gap:8px}
+  nav.tabs:is(.split,.split2)>.nav-f>.seg{min-width:max-content}nav.tabs:is(.split,.split2)>.nav-f select{min-width:140px}
+  nav.tabs:is(.split,.split2)>.nav-f :is(select,.seg,.fleet-all){border-radius:12px}}
+@media (max-width:760px){nav.tabs{position:static;grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(3,1fr);justify-content:stretch}nav.tabs button{border-color:var(--line)}}
+@media (max-width:420px){nav.tabs{grid-template-columns:repeat(2,1fr)}}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.filters{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:end;margin-bottom:16px}
+.fleet-all{margin-left:8px;height:42px;white-space:nowrap}@media (max-width:560px){.fleet-all{margin:8px 0 0;width:100%}}
+.flbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;display:block;margin-bottom:5px}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;min-height:42px}
+.seg button{font:500 14px var(--body);border:0;background:none;color:var(--ink2);padding:0 14px;border-radius:7px;cursor:pointer;min-height:34px}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+@media (max-width:560px){.filters>*{flex:1 1 100%}.seg{display:grid;grid-template-columns:repeat(3,1fr);width:100%}.seg button{padding:8px 4px}}
+select,input[type=date]{font:15px var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;height:42px;padding:0 12px;min-width:0;max-width:100%}
+select:focus,input[type=date]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+/* стрелка списка — своя, с отступом справа как у текста слева (системная прижата к краю) */
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M2 1.5h8L6 6.5z' fill='%237A8699' stroke='%237A8699' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:12px 8px;padding-right:36px;text-overflow:ellipsis}
+#sel-month{min-width:190px}
+.range{display:inline-flex;align-items:center;gap:6px}.range span{color:var(--muted)}
+.range.on input{border-color:var(--accent);background:var(--accent-soft)}
+:root[data-theme="dark"] input[type=date]{color-scheme:dark}
+@media (max-width:560px){.filters select,.range{width:100%}.range input{flex:1;min-width:0}}
+/* Телефон: фильтры компактнее — не занимают весь экран; «— выбрать —» и даты по центру */
+#sel-month{text-align:center;text-align-last:center}
+.filters select,nav.tabs select,.filters input[type=date],nav.tabs input[type=date]{text-align:center;text-align-last:center}   /* подписи в капсулах фильтров — по центру */
+@media (max-width:560px){
+  .filters{gap:8px 10px;margin-bottom:12px}
+  .flbl{font-size:10px;margin-bottom:3px}
+  .seg{min-height:0;padding:2px;border-radius:8px}
+  .seg button{font-size:12.5px;min-height:30px;padding:4px 2px;border-radius:6px}
+  select,input[type=date]{height:34px;font-size:13.5px;border-radius:8px;padding:0 8px}
+  select{padding-right:28px;background-position:right 8px center}
+  input[type=date]{text-align:center}
+  #period-note{font-size:11.5px;padding-bottom:4px}
+}
+.grid{display:grid;gap:16px;margin-bottom:16px}
+.g-kpi{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.g-2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.g-two{grid-template-columns:repeat(2,minmax(0,1fr))}   /* ровно две в ряд; на узком экране — одна */
+@media (max-width:760px){.g-two{grid-template-columns:1fr}}
+.g-3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+@media (max-width:420px){.g-2,.g-3{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+/* строка-вывод над карточками сводки (У2, ревью 17.10): одна фраза — что происходит */
+.verdict{margin:0 0 16px;padding:12px 16px;border-left:4px solid var(--aqua);background:var(--surface2);border-radius:10px;font-size:15px;line-height:1.45;color:var(--ink)}.verdict b{font-weight:600}
+
+.panel h2{font:600 15px/1.3 var(--display);color:var(--navy);margin:0 0 2px}
+.panel .sub{color:var(--muted);font-size:12.5px;margin:0 0 12px}
+.kpi .lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+/* цифра и отклонение: если не помещаются в строку — отклонение переносится под цифру, а не вылезает из карточки */
+.kpi .val{font:600 34px/1.1 var(--display);color:var(--navy);margin:8px 0 6px;letter-spacing:-.02em;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:8px;min-width:0}
+.kpi .val small{font:500 14px var(--body);color:var(--muted);letter-spacing:0}
+/* цифра уменьшается под ширину карточки (34 → 24 px), где поддерживается container query */
+.kpi{container-type:inline-size}@supports (font-size:1cqi){.kpi .val{font-size:clamp(24px,14cqi,34px)}}
+.kpi .foot{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;color:var(--ink2);font-size:12.5px}
+.kpi .foot+.foot{margin-top:4px}.kpi .val small .delta{font-size:14px;white-space:nowrap}
+.delta{font-weight:600}.delta.up{color:var(--good)}.delta.dn{color:var(--bad)}.delta.eq{color:var(--muted)}
+/* в таблицах: стрелка слева, число справа — колонка изменений ровная */
+td .delta{display:inline-flex;justify-content:space-between;gap:6px;min-width:5.4em}td .delta.eq{min-width:0}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px 2px 8px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.l-ok{color:var(--good);background:var(--good-soft)}.l-warn{color:var(--warn);background:var(--warn-soft)}.l-bad{color:var(--bad);background:var(--bad-soft)}.l-na{color:var(--muted);background:var(--surface2)}
+.side h3{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 14px var(--display);color:var(--ink);margin:0 0 10px}
+.sig{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.sig li{display:grid;grid-template-columns:10px 1fr auto;gap:8px;align-items:baseline;font-size:13px}
+.sig li i{width:8px;height:8px;border-radius:50%;display:inline-block;transform:translateY(-1px)}
+.sig .ok i{background:var(--good)}.sig .warn i{background:var(--warn)}.sig .bad i{background:var(--bad)}.sig .na i{background:var(--line)}
+.sig .v{white-space:nowrap;color:var(--ink)}.sig .v small{color:var(--muted);font-size:11.5px;margin-left:4px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--ink2);margin:0 0 8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
+.legend i.bar{height:10px;width:10px;border-radius:2px}
+.legend i.dash{background:repeating-linear-gradient(90deg,currentColor 0 4px,transparent 4px 7px)!important;height:2px}
+svg[role="img"]{display:block;width:100%;height:auto;overflow:visible}
+svg text{fill:var(--muted);font-family:var(--body);font-size:11px}
+svg .gl{stroke:var(--line);stroke-width:1}
+svg .ax{stroke:var(--line);stroke-width:1}
+svg .hit{fill:transparent}
+svg[role="img"]{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;cursor:crosshair}
+svg .cross{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+/* Навигация внутри вкладок: карточки и чипы ведут к блокам, строки и столбики выбирают месяц / теплоход / вебинар */
+.kpi.go{cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.kpi.go .lbl{display:flex;justify-content:space-between;gap:8px}.kpi.go .lbl::after{content:"";flex:none;align-self:center;width:9px;height:7px;background:var(--accent);clip-path:polygon(0 0,100% 0,50% 100%);border-radius:1px}   /* треугольник ▼ — как у раскрывающихся блоков */
+.kpi.go[data-go^="@"] .lbl::after{content:"";transform:rotate(-90deg)}   /* на другую вкладку — ▶ */
+.sig li[data-go],.side h3[data-go]{cursor:pointer;border-radius:6px}
+@media (hover:hover){.sig li[data-go]:hover{background:var(--surface2)}.side h3[data-go]:hover{color:var(--accent)}}
+@media (hover:hover){.kpi.go:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(0,0,0,.07)}
+  tr[data-pick]:hover td,.mix .row[data-pick]:hover{background:var(--surface2)}}
+.jump{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.jump button{font:500 13px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--ink2);border-radius:999px;padding:6px 12px;cursor:pointer}
+@media (hover:hover){.jump button:hover{border-color:var(--accent);color:var(--accent)}}
+.sec{scroll-margin-top:calc(var(--nav-h,57px) + 12px)}
+.flash{animation:obflash 1.6s ease}
+@keyframes obflash{0%,35%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+[data-pick]{cursor:pointer}.mix .row[data-pick]{border-radius:6px;margin:0 -6px;padding:2px 6px}
+#c-board{cursor:pointer}
+.mix{display:grid;gap:8px}
+.mix .row{display:grid;grid-template-columns:minmax(110px,170px) 1fr 64px 120px;gap:10px;align-items:center;font-size:13px}
+.mix .bar{height:22px;background:var(--surface2);border-radius:4px;overflow:hidden;display:flex}
+.mix .bar i{display:block;height:100%}
+.mix .n{text-align:right;color:var(--ink);font-weight:600}
+.mix .cr{text-align:right;font-size:12.5px}
+.mix .row.tot{padding-bottom:8px;border-bottom:1px solid var(--line)}
+.srcbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:2px 0 8px;background:var(--surface2)}.srcbar i{display:block;height:100%}
+@media (max-width:560px){.mix .row{grid-template-columns:1fr 64px;row-gap:4px}.mix .bar{grid-column:1/-1;order:3}.mix .cr{grid-column:1/-1;text-align:left}}
+.funnel{display:grid;gap:8px}
+.funnel .row{display:grid;grid-template-columns:minmax(120px,190px) 1fr 70px 90px;gap:10px;align-items:center;font-size:13px}
+.funnel .bar{height:22px;background:var(--surface2);border-radius:4px;overflow:hidden;position:relative}
+.funnel .bar i{position:absolute;top:0;bottom:0;left:0;inset:0 auto 0 0;background:var(--s1);border-radius:0 4px 4px 0}
+.funnel .n{text-align:right;color:var(--ink);font-weight:600}
+.funnel .cr{text-align:right;font-size:12.5px}
+@media (max-width:560px){.funnel .row{grid-template-columns:1fr 64px;row-gap:4px}.funnel .bar{grid-column:1/-1;order:3}.funnel .cr{grid-column:1/-1;text-align:left}}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--line);color:var(--ink2)}
+th.r,td.r{text-align:right;white-space:nowrap}
+td.b{color:var(--ink);font-weight:600}
+.tbl{overflow-x:auto}
+/* Заголовки таблиц прилипают при прокрутке.
+   Компьютер: к нижнему краю прилипшей строки вкладок (--nav-h ставит JS); таблица без своей прокрутки.
+   Телефон/узкое окно: вкладки не прилипают, а таблица может быть шире экрана — у длинной таблицы своя
+   прокрутка по высоте, заголовок прилипает к её верху. */
+thead th{position:sticky;z-index:3;background:var(--surface);box-shadow:inset 0 -1px 0 var(--line)}
+@media (min-width:761px){.tbl{overflow:visible}thead th{top:var(--nav-h,57px)}}
+@media (max-width:760px){.tbl{max-height:75vh;overflow:auto;overscroll-behavior-x:contain}thead th{top:0}}
+@media (min-width:761px){.tbl.wide{overflow-x:auto;overscroll-behavior-x:contain}.tbl.wide thead th{top:0}}
+td.rt{min-width:13em}
+.empty{padding:18px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:13px;background:var(--surface2)}
+.empty b{color:var(--ink2)}
+.muted{color:var(--muted)}
+.nw{white-space:nowrap}
+.note{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+.err{background:var(--bad-soft);color:var(--bad);border-radius:10px;padding:14px 16px;line-height:1.5}.err b{color:var(--ink)}
+.loading{display:flex;gap:12px;align-items:center;padding:40px 0;color:var(--muted)}
+.spin{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* Заглушка при первом открытии (пока нет копии на устройстве): силуэт карточек и графика «дышит», подпись меняется —
+   ожидание выглядит как сборка отчёта, а не как пустой экран */
+.sk i{display:block;border-radius:6px;background:var(--surface2);position:relative;overflow:hidden}
+.sk .sk-l{height:10px;margin:6px 0;width:80%}.sk .sk-v{height:30px;width:45%;margin:12px 0 10px}
+.sk-bars{display:flex;align-items:flex-end;gap:5px;height:150px;margin-top:14px;border-bottom:1px solid var(--line)}
+.sk-bars i{flex:1;border-radius:4px 4px 0 0;background:var(--s1-soft);transform-origin:bottom}
+@media (max-width:560px){.sk-wrap .g-kpi .sk:nth-child(n+3){display:none}}
+.sk-msg{color:var(--muted);text-align:center;margin:18px 0 0;min-height:1.4em;transition:opacity .25s}
+@media (prefers-reduced-motion:no-preference){
+  .sk i:not(.sk-bars i)::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:shim 1.4s ease-in-out infinite}
+  :root[data-theme="dark"] .sk i:not(.sk-bars i)::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+  .sk-bars i{animation:wave 1.3s ease-in-out infinite alternate;animation-delay:calc(var(--n)*-90ms)}
+  /* загрузка и обновление: по полосе бренда бежит блик */
+  body.busy .wrap::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,.85),transparent) 0 0/40% 100% no-repeat,linear-gradient(90deg,var(--navy) 0 60%,var(--aqua) 60% 85%,var(--orange) 85%);animation:stripe 1.1s linear infinite}
+  /* появление вкладки: панели поднимаются по очереди, столбики растут от нуля, линии прорисовываются, полосы вытягиваются */
+  .intro .panel{animation:rise .35s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--k,0)*35ms)}
+  .intro svg .bx{animation:grow .65s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--k,0)*35ms + var(--d,0ms))}
+  .intro svg .ln{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1s ease-out forwards;animation-delay:calc(var(--k,0)*35ms + 200ms)}
+  .intro svg .fd{animation:fade .6s ease-out both;animation-delay:calc(var(--k,0)*35ms + 450ms)}
+  .intro svg .pop{transform-box:fill-box;transform-origin:center;animation:pop .45s cubic-bezier(.2,.8,.2,1.4) both;animation-delay:calc(var(--k,0)*35ms + var(--d,0ms))}
+  .intro .funnel .bar i,.intro .funnel .bar>div,.intro .sbar i{animation:wgrow .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--k,0)*35ms + 120ms)}
+  /* свежие данные отличаются от показанных: изменившиеся числа мягко подсвечиваются */
+  .kpi .val.upd,.hero .big.upd{animation:upd 1.4s ease}
+}
+@keyframes shim{to{transform:translateX(100%)}}
+@keyframes wave{from{transform:scaleY(.35)}to{transform:scaleY(1)}}
+@keyframes stripe{from{background-position:-67% 0,0 0}to{background-position:167% 0,0 0}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+@keyframes grow{from{transform:scaleY(0)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fade{from{opacity:0}}
+@keyframes wgrow{from{width:0}}
+@keyframes pop{from{transform:scale(0);opacity:0}}
+@keyframes upd{0%,30%{color:var(--accent);text-shadow:0 0 12px var(--accent-soft)}}
+.tip{position:fixed;pointer-events:none;z-index:20;background:var(--ink);color:var(--bg);padding:8px 10px;border-radius:8px;font-size:12.5px;line-height:1.45;max-width:280px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.tip b{font-weight:600}.tip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.dq{margin-top:16px}
+details.pick{padding:12px 16px}
+details.pick summary{font:600 16px/1.3 var(--display);color:var(--navy);flex-wrap:wrap;column-gap:.3em}
+details.pick summary .pick-n{flex-basis:auto}
+details.pick .pick-n{font:500 14px var(--body)}
+.pick-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+details.dq.pick li{display:block;padding:0;background:none;border-radius:0}details.dq.pick li::before{content:none}
+.pick-list button{width:100%;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;text-align:left;font:500 14px var(--body);color:var(--ink);background:var(--surface2);border:1px solid transparent;border-radius:8px;padding:9px 12px;cursor:pointer}
+
+.pick-list button[aria-current="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.pick-list .muted{font-size:12.5px}
+footer.method .dq{margin:0 0 22px;font-size:14px;line-height:1.45;color:var(--ink2)}
+footer.method{font-size:12.5px;line-height:1.5;color:var(--muted);margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}
+footer.method h3{font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+footer.method dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px 28px;margin:0}
+footer.method dt{font-weight:600;color:var(--ink2);margin:0 0 2px}footer.method dd{margin:0}
+footer.method .how{margin-top:3px;font-size:13px;color:var(--muted)}footer.method .how summary{cursor:pointer;color:var(--link);font-size:12.5px;width:max-content}footer.method .how[open] summary{margin-bottom:2px}
+/* Навигация: «Назад» — к предыдущей вкладке, «Наверх» — в начало страницы */
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:15;display:flex;flex-direction:column;gap:10px}
+.fab button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--accent);box-shadow:0 4px 14px rgba(16,58,96,.18);display:grid;place-items:center;cursor:pointer;padding:0}
+.fab button[hidden]{display:none}
+.fab svg{width:20px;height:20px}
+.dragging{cursor:grabbing;user-select:none}.dragging *{cursor:grabbing}   /* тянут таблицу мышью */
+body.busy #btn-ref svg{animation:sp 1s linear infinite}   /* пока обновляется — значок крутится */
+@media print{.fab{display:none}}
+@media (hover:hover){.btn:hover,.btn.icon-btn:hover,.fab button:hover{background:var(--accent-soft)}.pick-list button:hover{border-color:var(--line)}}
+/* скрытая кнопка скрыта всегда — даже если её стиль задаёт display */
+[hidden]{display:none!important}
+details.dq summary{cursor:pointer;font-weight:600;font-size:15px;color:var(--ink);list-style:none;display:flex;align-items:center;gap:10px}
+details.dq summary::-webkit-details-marker{display:none}
+details.dq summary::before{content:"";width:7px;height:9px;background:var(--ink2);clip-path:polygon(0 0,100% 50%,0 100%);border-radius:1px;transition:transform .15s ease;flex:none;margin-left:2px}   /* треугольник ▸, раскрыто — ▾ */
+details.dq[open] summary::before{transform:rotate(90deg)}
+details.dq summary:focus:not(:focus-visible){outline:none}
+details.dq ul{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:6px}
+details.dq li{display:grid;grid-template-columns:4px 1fr;gap:10px;font-size:13px;padding:6px 10px;background:var(--surface2);border-radius:6px}
+details.dq li::before{content:"";border-radius:2px;background:var(--muted)}
+details.dq li.ok::before{background:var(--good)}details.dq li.warn::before{background:var(--warn)}details.dq li.bad::before{background:var(--bad)}
+.hero{display:flex;flex-wrap:wrap;gap:6px 24px;align-items:baseline}
+.hero .big{font:600 44px/1 var(--display);color:var(--navy);letter-spacing:-.02em}
+.hero .rng{font-size:14px;color:var(--ink2)}
+.tip{position:fixed;pointer-events:none;z-index:20;background:var(--ink);color:var(--bg);padding:8px 10px;border-radius:8px;font-size:12.5px;line-height:1.45;max-width:280px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.tip b{font-weight:600}.tip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.dq{margin-top:16px}
+details.pick{padding:12px 16px}
+details.pick summary{font:600 16px/1.3 var(--display);color:var(--navy);flex-wrap:wrap;column-gap:.3em}
+details.pick summary .pick-n{flex-basis:auto}
+details.pick .pick-n{font:500 14px var(--body)}
+.pick-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+details.dq.pick li{display:block;padding:0;background:none;border-radius:0}details.dq.pick li::before{content:none}
+.pick-list button{width:100%;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;text-align:left;font:500 14px var(--body);color:var(--ink);background:var(--surface2);border:1px solid transparent;border-radius:8px;padding:9px 12px;cursor:pointer}
+
+.pick-list button[aria-current="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.pick-list .muted{font-size:12.5px}
+footer.method .dq{margin:0 0 22px;font-size:14px;line-height:1.45;color:var(--ink2)}
+footer.method{font-size:12.5px;line-height:1.5;color:var(--muted);margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}
+footer.method h3{font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+footer.method dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px 28px;margin:0}
+footer.method dt{font-weight:600;color:var(--ink2);margin:0 0 2px}footer.method dd{margin:0}
+/* Навигация: «Назад» — к предыдущей вкладке, «Наверх» — в начало страницы */
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:15;display:flex;flex-direction:column;gap:10px}
+.fab button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--accent);box-shadow:0 4px 14px rgba(16,58,96,.18);display:grid;place-items:center;cursor:pointer;padding:0}
+.fab button[hidden]{display:none}
+.fab svg{width:20px;height:20px}
+body.busy #btn-ref svg{animation:sp 1s linear infinite}   /* пока обновляется — значок крутится */
+@media print{.fab{display:none}}
+@media (hover:hover){.btn:hover,.btn.icon-btn:hover,.fab button:hover{background:var(--accent-soft)}.pick-list button:hover{border-color:var(--line)}}
+/* скрытая кнопка скрыта всегда — даже если её стиль задаёт display */
+[hidden]{display:none!important}
+details.dq summary{cursor:pointer;font-weight:600;font-size:15px;color:var(--ink);list-style:none;display:flex;align-items:center;gap:10px}
+details.dq summary::-webkit-details-marker{display:none}
+details.dq summary::before{content:"";width:7px;height:9px;background:var(--ink2);clip-path:polygon(0 0,100% 50%,0 100%);border-radius:1px;transition:transform .15s ease;flex:none;margin-left:2px}   /* треугольник ▸, раскрыто — ▾ */
+details.dq[open] summary::before{transform:rotate(90deg)}
+details.dq summary:focus:not(:focus-visible){outline:none}
+details.dq ul{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:6px}
+details.dq li{display:grid;grid-template-columns:4px 1fr;gap:10px;font-size:13px;padding:6px 10px;background:var(--surface2);border-radius:6px}
+details.dq li::before{content:"";border-radius:2px;background:var(--muted)}
+details.dq li.ok::before{background:var(--good)}details.dq li.warn::before{background:var(--warn)}details.dq li.bad::before{background:var(--bad)}
+.hero{display:flex;flex-wrap:wrap;gap:6px 24px;align-items:baseline}
+.hero .big{font:600 44px/1 var(--display);color:var(--navy);letter-spacing:-.02em}
+.hero .rng{font-size:14px;color:var(--ink2)}
+
+/* Продукт: полоска загрузки, тепловые таблицы, пирамида возраста, сравнение с конкурентами */
+.lb{display:inline-block;width:60px;height:8px;border-radius:4px;background:var(--surface2);vertical-align:middle;overflow:hidden;margin-right:4px}
+.lb.wide{width:110px}.lb i{display:block;height:100%;border-radius:4px}
+tr.tot td{border-top:2px solid var(--line);font-weight:600;color:var(--ink)}
+table.heat td.hm{text-align:center;font-size:12.5px;color:var(--ink);min-width:42px}
+.pyr{display:grid;gap:6px;max-width:720px}
+.pyr .row{display:grid;grid-template-columns:1fr 56px 1fr;align-items:center;gap:8px;font-size:13px}
+.pyr .l,.pyr .r{display:flex;align-items:center;gap:6px;height:22px}.pyr .l{flex-direction:row-reverse}
+.pyr i{display:block;height:100%;border-radius:4px;min-width:2px}.pyr em{font-style:normal;color:var(--ink2);font-size:12px;white-space:nowrap}
+.pyr .age{text-align:center;color:var(--muted);font-weight:600}
+.cmp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px}
+.cmp-h{font-size:13.5px;color:var(--ink2);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.cmp table{margin-top:6px}.cmp td{padding:5px 8px;font-size:12.5px}
+#f-vst,#f-rsort{min-height:0}
+#view>.panel,#view>section{margin-bottom:16px}   /* отступ между блоками вкладки */
+@media (max-width:560px){#f-y{grid-template-columns:repeat(4,1fr)}#f-vst,#f-rsort{grid-template-columns:repeat(2,1fr)}}
+
+/* Решения: карточки сигналов, гипотезы и тесты */
+.sig p{margin:6px 0 0;font-size:13.5px}.sig p.muted{font-size:12.5px}
+td .how{margin-top:3px;font-size:12.5px;color:var(--muted)}td .how summary{cursor:pointer;color:var(--link);width:max-content}
+td.wide-t{min-width:260px;max-width:440px}
+#t-list td:nth-child(5),#t-list td:nth-child(4){min-width:120px}
+tr.base td{background:var(--surface2)}
+.seg.wk{flex-wrap:nowrap;overflow-x:auto;max-width:100%;margin:0 0 16px}.seg.wk button{white-space:nowrap}
+@media (max-width:560px){.seg.wk{display:flex}#f-hs{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1><span class="h1-title">Решения Созвездия</span> <span class="h1-sub">Что делать дальше и сработало ли</span><span class="m-actions m-only"><button type="button" class="btn js-refresh js-refresh-m" title="Обновить данные" aria-label="Обновить данные"><span class="t-full">Обновить данные</span><span class="t-short">Обновить</span><svg class="t-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="btn icon-btn js-fs" hidden></button><button type="button" class="btn icon-btn js-theme"></button></span></h1>
+    </div>
+    <div class="refresh"><span id="stamp" class="muted"></span><span class="zoom" role="group" aria-label="Масштаб"><button type="button" class="btn icon-btn" data-zoom="-1" title="Мельче" aria-label="Мельче">−</button><button type="button" class="btn zoom-val" data-zoom="0" title="Обычный размер">100%</button><button type="button" class="btn icon-btn" data-zoom="1" title="Крупнее" aria-label="Крупнее">+</button></span><button type="button" id="btn-fs" class="btn icon-btn" hidden></button><button type="button" id="btn-theme" class="btn icon-btn"></button><button type="button" id="btn-refresh" class="btn js-refresh">Обновить данные</button></div>
+    <div class="legend-zones" aria-label="Метрики">
+      <span class="pill l-ok">неделя — пн–вс, МСК</span>
+      <span class="pill l-na">визиты — Метрика</span>
+      <span class="pill l-na">заявки и оплаты — Букинг</span>
+      <span class="pill l-warn">база «до» — 14.09–04.10</span>
+    </div>
+  </header>
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+  <div id="filters"></div>
+  <main id="view"><div class="sk-wrap" aria-busy="true"><div class="grid g-kpi"><div class="panel kpi sk"><i class="sk-l" style="width:55%"></i><i class="sk-v"></i><i class="sk-l"></i><i class="sk-l" style="width:65%"></i></div><div class="panel kpi sk"><i class="sk-l" style="width:55%"></i><i class="sk-v"></i><i class="sk-l"></i><i class="sk-l" style="width:65%"></i></div><div class="panel kpi sk"><i class="sk-l" style="width:55%"></i><i class="sk-v"></i><i class="sk-l"></i><i class="sk-l" style="width:65%"></i></div><div class="panel kpi sk"><i class="sk-l" style="width:55%"></i><i class="sk-v"></i><i class="sk-l"></i><i class="sk-l" style="width:65%"></i></div></div><div class="panel sk" style="margin-top:16px"><i class="sk-l" style="width:30%;height:14px"></i><div class="sk-bars"><i style="--n:0;height:55%"></i><i style="--n:1;height:62%"></i><i style="--n:2;height:48%"></i><i style="--n:3;height:70%"></i><i style="--n:4;height:66%"></i><i style="--n:5;height:58%"></i><i style="--n:6;height:74%"></i><i style="--n:7;height:80%"></i><i style="--n:8;height:61%"></i><i style="--n:9;height:52%"></i><i style="--n:10;height:68%"></i><i style="--n:11;height:77%"></i><i style="--n:12;height:72%"></i><i style="--n:13;height:59%"></i><i style="--n:14;height:64%"></i><i style="--n:15;height:83%"></i><i style="--n:16;height:76%"></i><i style="--n:17;height:69%"></i><i style="--n:18;height:57%"></i><i style="--n:19;height:71%"></i><i style="--n:20;height:79%"></i><i style="--n:21;height:66%"></i><i style="--n:22;height:74%"></i><i style="--n:23;height:88%"></i></div></div><p class="sk-msg" id="sk-msg" role="status">Загружаю данные…</p></div></main>
+<script>
+/* Сторож совместимости: если основной скрипт не запустился (старый встроенный браузер Telegram на Android, Windows, Linux),
+   вместо вечной «загрузки» показываем, что обновить. Без новых возможностей языка — должен работать везде. */
+window.__szErr='';
+window.addEventListener('error',function(e){if(!window.__szErr)window.__szErr=String(e&&e.message||'')});
+window.addEventListener('load',function(){setTimeout(function(){
+  if(window.__szBoot)return;var v=document.getElementById('view');if(!v)return;var ua=navigator.userAgent;
+  var how=/Android/i.test(ua)?'обновите Telegram и «Android System WebView» (или Chrome) в Google Play / AppGallery':
+    /Windows/i.test(ua)?'обновите Telegram Desktop; если не помогло — установите Microsoft Edge WebView2 Runtime (бесплатно, с сайта Microsoft)':
+    /Linux|X11/i.test(ua)?'обновите Telegram Desktop и пакет webkit2gtk (libwebkit2gtk-4.1) через менеджер пакетов':
+    /iPhone|iPad|Macintosh/i.test(ua)?'обновите iOS / macOS и Telegram':'обновите Telegram';
+  v.innerHTML='<div class="err"><b>Отчёт не запустился на этом устройстве.</b> Похоже, встроенный браузер устарел: '+how+'.'+
+    (window.__szErr?'<br><small>Ошибка: '+window.__szErr.replace(/[<>&]/g,'')+'</small>':'')+'</div>';
+},1500)});
+</script>
+  <footer class="method" id="method"></footer>
+</div>
+<div class="fab"><button type="button" id="btn-back" title="Назад" aria-label="Назад" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5v11L7.5 12z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button><button type="button" id="btn-top" title="Наверх" aria-label="Наверх" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 14.5h11L12 7.5z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button><button type="button" id="btn-ref" title="Обновить данные" aria-label="Обновить данные" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12a7 7 0 1 1-2.05-4.95" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19.5 4.5v5h-5z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button></div>
+<div class="tip" id="tip" hidden></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nf=new Intl.NumberFormat('ru-RU');
+const fmt=(v,d=0)=>v==null||isNaN(v)?'—':new Intl.NumberFormat('ru-RU',{maximumFractionDigits:d,minimumFractionDigits:d}).format(v);
+const pct=(v,d=1)=>v==null||isNaN(v)?'—':fmt(v*100,d)+'%';
+// неразрывные пробелы: сумма и «₽» не переносятся на разные строки
+const rub=v=>v==null||isNaN(v)?'—':Math.abs(v)>=1e9?fmt(v/1e9,2)+'\u00a0млрд\u00a0₽':Math.abs(v)>=1e6?fmt(v/1e6,1)+'\u00a0млн\u00a0₽':nf.format(Math.round(v))+'\u00a0₽';
+const MON=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+const MON_S=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const monName=m=>MON[+m.slice(5,7)-1]+' '+m.slice(0,4);
+const monShort=m=>MON_S[+m.slice(5,7)-1]+' '+m.slice(2,4);
+const dShort=d=>+d.slice(8,10)+' '+MON_S[+d.slice(5,7)-1];
+const sum=a=>a.reduce((x,y)=>x+y,0);
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function delta(cur,prev,{inverse=false,asPct=true}={}){
+  if(cur==null||prev==null||!prev)return'<span class="delta eq">нет сравнения</span>';
+  const ch=(cur-prev)/prev,good=inverse?ch<0:ch>0,cls=Math.abs(ch)<0.005?'eq':good?'up':'dn';
+  return`<span class="delta ${cls}">${ch>0?'▲':ch<0?'▼':'='} ${fmt(Math.abs(ch)*100,0)}%</span>`;
+}
+function showTip(html,ev){tip.innerHTML=html;tip.hidden=false;const z=parseFloat(document.documentElement.style.zoom)||1;
+  const x=ev.clientX/z,y=ev.clientY/z,w=tip.offsetWidth,h=tip.offsetHeight,touch=ev.pointerType&&ev.pointerType!=='mouse';
+  tip.style.left=Math.max(8,Math.min(touch?x-w/2:x+14,innerWidth/z-w-8))+'px';
+  tip.style.top=(touch?Math.max(8,y-h-28):(y+h+20>innerHeight/z?y-h-12:y+14))+'px'}
+function hideTip(){tip.hidden=true}
+/**
+ * Прокрутка значений графика мышью и пальцем. idx(px) — номер точки по x в координатах viewBox,
+ * show(i, ev) — нарисовать выделение и подсказку, clear() — убрать.
+ * На телефоне горизонтальное движение пальца листает значения, вертикальное — страницу (touch-action: pan-y).
+ */
+function bindScrub(svg,W,idx,show,clear){
+  const at=ev=>{const r=svg.getBoundingClientRect();return idx((ev.clientX-r.left)/r.width*W)};
+  const move=ev=>{const i=at(ev);if(i==null)return;scrubClear=clear;show(i,ev)};
+  // без захвата указателя: палец, ушедший за край графика, не держит подсказку
+  svg.addEventListener('pointerdown',ev=>{if(ev.pointerType!=='mouse'){try{svg.releasePointerCapture(ev.pointerId)}catch(e){}}move(ev)});
+  svg.addEventListener('pointermove',move);
+  svg.addEventListener('pointerleave',ev=>{if(ev.pointerType==='mouse'){scrubClear=null;clear()}});
+}
+// касание вне графика — убрать подсказку (один слушатель на страницу)
+let scrubClear=null;
+document.addEventListener('pointerdown',ev=>{if(scrubClear&&!ev.target.closest('svg[role="img"]')){scrubClear();scrubClear=null}},{passive:true});
+document.addEventListener('scroll',hideTip,{passive:true});
+
+/* ---------- графики (SVG) ---------- */
+// число делений шкалы: у максимумов 2,5 и 5 (250, 500, 5…) — пять ровных шагов, иначе четыре
+function gridSteps(max){const n=max/Math.pow(10,Math.floor(Math.log10(max)));return Math.abs(n-2.5)<1e-9||Math.abs(n-5)<1e-9?5:4}
+function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p;return(n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p}
+/**
+ * Линии по общей оси X. series: [{name,color,values,dash,area}], labels — подписи точек (для подсказки),
+ * ticks — функция (i)→подпись или ''. Подсказка — перекрестье по ближайшей точке.
+ */
+/* Ширина графика — по месту на странице (CWID, меряет fitCharts после вставки), чтобы подписи были 11 px и на телефоне,
+   а не сжимались вместе с рисунком 760 px; на узком экране график ниже. Подписи по оси X прорежены, чтобы не слипались. */
+const CWID={};
+function chartBox(id,height){const W=CWID[id]||760;return{W,H:Math.round(W<520?Math.min(height,Math.max(170,W*.62)):height)}}
+function thinTicks(ticks,n,span){const has=[];for(let i=0;i<n;i++)if(ticks(i))has.push(i);const step=Math.max(1,Math.ceil(has.length*58/Math.max(1,span)));
+  const keep=new Set(has.filter((_,k)=>k%step===0));return i=>keep.has(i)?ticks(i):''}
+function lineChart(id,{labels,series,ticks,height=240,fmtV=v=>fmt(v)}){
+  const{W,H}=chartBox(id,height),L=44,R=12,T=10,B=26,n=labels.length;ticks=thinTicks(ticks,n,W-L-R);
+  const max=niceMax(Math.max(1,...series.flatMap(s=>s.values.filter(v=>v!=null))));
+  const x=i=>L+(n<=1?0:i*(W-L-R)/(n-1)),y=v=>T+(H-T-B)*(1-v/max);
+  let g='';
+  const ST=gridSteps(max);for(let k=0;k<=ST;k++){const v=max*k/ST;g+=`<line class="gl" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`}
+  for(let i=0;i<n;i++){const t=ticks(i);if(t)g+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle">${esc(t)}</text>`}
+  series.forEach(s=>{let d='',open=false;s.values.forEach((v,i)=>{if(v==null){open=false;return}d+=(open?'L':'M')+x(i).toFixed(1)+','+y(v).toFixed(1);open=true});
+    if(s.area){let a='',st=null,en=null;s.values.forEach((v,i)=>{if(v==null)return;if(st==null)st=i;en=i;a+=(a?'L':'M')+x(i).toFixed(1)+','+y(v).toFixed(1)});
+      if(a)g+=`<path class="fd" d="${a}L${x(en)},${y(0)}L${x(st)},${y(0)}Z" fill="${s.color}" opacity=".12"/>`}
+    g+=`<path ${s.dash?'class="fd" stroke-dasharray="5 4"':'class="ln" pathLength="1"'} d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`});
+  g+=`<line class="cross" id="${id}-x" y1="${T}" y2="${H-B}" x1="-9999" x2="-9999"/><g id="${id}-dots"></g><rect class="hit" x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}"/>`;
+  setTimeout(()=>{
+    const svg=document.getElementById(id);if(!svg)return;
+    bindScrub(svg,W,px=>Math.max(0,Math.min(n-1,Math.round((px-L)/((W-L-R)/Math.max(1,n-1))))),(i,ev)=>{
+      document.getElementById(id+'-x').setAttribute('x1',x(i));document.getElementById(id+'-x').setAttribute('x2',x(i));
+      document.getElementById(id+'-dots').innerHTML=series.map(s=>s.values[i]==null?'':`<circle cx="${x(i)}" cy="${y(s.values[i])}" r="4" fill="${s.color}" stroke="${cssv('--surface')}" stroke-width="2"/>`).join('');
+      showTip(`<b>${esc(labels[i])}</b><br>`+series.filter(s=>s.values[i]!=null).map(s=>`<i style="background:${s.color}"></i>${esc(s.name)}: <b>${fmtV(s.values[i])}</b>`).join('<br>'),ev)},
+    ()=>{hideTip();document.getElementById(id+'-x').setAttribute('x1',-9999);document.getElementById(id+'-x').setAttribute('x2',-9999);document.getElementById(id+'-dots').innerHTML=''});
+  },0);
+  return`<svg id="${id}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map(s=>s.name).join(', '))}">${g}</svg>`;
+}
+/** Столбики: bars [{label, value, tip}] + необязательная линия поверх (line: {name,color,values}). */
+function barChart(id,{bars,color,height=220,line,ticks,fmtV=v=>fmt(v),name}){
+  const{W,H}=chartBox(id,height),L=44,R=12,T=10,B=26,n=bars.length;if(ticks)ticks=thinTicks(ticks,n,W-L-R);
+  const max=niceMax(Math.max(1,...bars.map(b=>b.value),...(line?line.values.filter(v=>v!=null):[])));
+  const bw=(W-L-R)/n,gap=Math.min(2,bw*.2),y=v=>T+(H-T-B)*(1-v/max);
+  let g='';
+  const ST=gridSteps(max);for(let k=0;k<=ST;k++){const v=max*k/ST;g+=`<line class="gl" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`}
+  bars.forEach((b,i)=>{const x0=L+i*bw+gap/2,w=Math.max(1,bw-gap),h=y(0)-y(b.value);
+    g+=`<g class="bx" style="transform-origin:0 ${y(0)}px;--d:${Math.round(i*400/Math.max(1,n))}ms">`;
+    const bar=(bx,bwid,v,fill,ring)=>{const hh=y(0)-y(v);if(hh<=0)return'';const r=Math.min(4,bwid/2,hh);
+      return`<path d="M${bx},${y(0)}V${y(v)+r}Q${bx},${y(v)} ${bx+r},${y(v)}H${bx+bwid-r}Q${bx+bwid},${y(v)} ${bx+bwid},${y(v)+r}V${y(0)}Z" fill="${fill}"${ring?` stroke="${cssv('--surface')}" stroke-width="2"`:''}/>`};
+    if(b.inner!=null&&b.inner>0){
+      // накопительный столбик: снизу «из них» (inner), сверху остаток до value — вплотную
+      const yi=y(Math.min(b.inner,b.value)),top=b.value>b.inner;
+      if(top&&yi-y(b.value)>0){const r=Math.min(4,w/2,yi-y(b.value));
+        g+=`<path d="M${x0},${yi}V${y(b.value)+r}Q${x0},${y(b.value)} ${x0+r},${y(b.value)}H${x0+w-r}Q${x0+w},${y(b.value)} ${x0+w},${y(b.value)+r}V${yi}Z" fill="${b.color||color}"/>`}
+      g+=top?`<rect x="${x0}" y="${yi}" width="${w}" height="${y(0)-yi}" fill="${b.innerColor}"/>`:bar(x0,w,b.inner,b.innerColor);
+    } else if(h>0)g+=bar(x0,w,b.value,b.color||color);
+    g+='</g>';
+    const t=ticks?ticks(i):'';if(t)g+=`<text x="${x0+w/2}" y="${H-6}" text-anchor="middle">${esc(t)}</text>`;
+  });
+
+  if(line){let d='',open=false;line.values.forEach((v,i)=>{if(v==null){open=false;return}const cx=L+i*bw+bw/2;d+=(open?'L':'M')+cx.toFixed(1)+','+y(v).toFixed(1);open=true});
+    g+=`<path ${line.dash?'class="fd" stroke-dasharray="6 4"':'class="ln" pathLength="1"'} d="${d}" fill="none" stroke="${line.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`}
+  g+=`<rect class="hit" x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}"/>`;
+  setTimeout(()=>{const svg=document.getElementById(id);if(!svg)return;
+    bindScrub(svg,W,px=>Math.max(0,Math.min(n-1,Math.floor((px-L)/bw))),(i,ev)=>{const b=bars[i];
+      showTip(`<b>${esc(b.label)}</b><br>${b.inner!=null?'':`<i style="background:${b.color||color}"></i>`}${esc(name||'')}: <b>${fmtV(b.value)}</b>`+(b.tip?'<br>'+b.tip:'')+(line&&line.values[i]!=null?`<br><i style="background:${line.color}"></i>${esc(line.name)}: <b>${fmt(line.values[i],1)}</b>`:''),ev)},
+    ()=>hideTip())},0);
+  return`<svg id="${id}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(name||'')}">${g}</svg>`;
+}
+function legend(items){return`<div class="legend">${items.map(([name,color,kind])=>`<span><i class="${kind||''}" style="background:${color};color:${color}"></i>${esc(name)}</span>`).join('')}</div>`}
+/* ================= Решения Созвездия: данные и вкладки ================= */
+let D=null;
+const S={tab:'week',pw:null,hs:'all'};
+try{Object.assign(S,JSON.parse(localStorage.getItem('dc-state')||'{}'))}catch(e){}
+const TABS=[['week','Неделя'],['plats','Площадки'],['signals','Сигналы'],['hyp','Гипотезы'],['tests','Тесты']];
+function save(){try{localStorage.setItem('dc-state',JSON.stringify(S))}catch(e){}}
+const HIST=[];
+function go(tab){if(tab===S.tab)return;histPush();S.tab=tab;save();render();window.scrollTo({top:0});navState()}
+function histPush(){HIST.push({tab:S.tab,pw:S.pw,hs:S.hs,sy:scrollY});if(HIST.length>30)HIST.shift()}
+function goBack(){const h=HIST.pop();if(!h)return;Object.assign(S,{tab:h.tab,pw:h.pw,hs:h.hs});save();render();window.scrollTo({top:h.sy||0});navState()}
+function navState(){$('#btn-back').hidden=!HIST.length;$('#btn-top').hidden=scrollY<400}
+$('#btn-back').onclick=e=>{if(e.detail)e.currentTarget.blur();goBack()};
+$('#btn-top').onclick=e=>{if(e.detail)e.currentTarget.blur();window.scrollTo({top:0,behavior:'smooth'})};
+$('#btn-ref').onclick=e=>{if(e.detail)e.currentTarget.blur();if(!document.body.classList.contains('busy'))load(true)};   // третья плавающая кнопка — то же, что «Обновить данные»
+{const vis=new Set(),io=new IntersectionObserver(es=>{es.forEach(e=>e.isIntersecting?vis.add(e.target):vis.delete(e.target));$('#btn-ref').hidden=vis.size>0});   // появляется, когда «Обновить данные» в шапке ушла с экрана
+  document.querySelectorAll('.js-refresh').forEach(b=>io.observe(b))}
+// Таблицу и строку переключателей шире экрана мышью можно тянуть вбок (пальцем и тачпадом — как обычно); после перетаскивания клик не срабатывает
+(function(){let d=null;
+  document.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button)return;const el=e.target.closest('.tbl,.tbl-wrap,.seg.wk');
+    if(!el||el.scrollWidth<=el.clientWidth+1||e.target.closest('input,select,textarea'))return;d={el,x:e.clientX,s:el.scrollLeft,m:false}});
+  addEventListener('pointermove',e=>{if(!d)return;const dx=e.clientX-d.x;if(!d.m){if(Math.abs(dx)<6)return;d.m=true;d.el.classList.add('dragging');getSelection().removeAllRanges()}
+    d.el.scrollLeft=d.s-dx});
+  document.addEventListener('dragstart',e=>{if(d)e.preventDefault()});
+  addEventListener('pointerup',()=>{if(!d)return;const m=d.m;d.el.classList.remove('dragging');d=null;if(!m)return;
+    const stop=ev=>{ev.stopPropagation();ev.preventDefault()};addEventListener('click',stop,true);setTimeout(()=>removeEventListener('click',stop,true),50)})})();
+addEventListener('scroll',()=>{$('#btn-top').hidden=scrollY<400},{passive:true});
+let GO=null;
+function applyGo(){if(!GO)return false;const[t,sec]=GO.split('__');GO=null;if(!TABS.some(x=>x[0]===t))return false;S.tab=t;save();render();navState();
+  if(sec)requestAnimationFrame(()=>{const el=document.getElementById(sec);if(el){el.scrollIntoView({block:'start'});el.classList.add('flash')}});else window.scrollTo({top:0});return true}
+
+/* ---------- подготовка ---------- */
+let W=[],PW=[],DG=null;
+const fd=d=>d?d.slice(8,10)+'.'+d.slice(5,7)+'.'+d.slice(2,4):'—';
+const dm=d=>d?d.slice(8,10)+'.'+d.slice(5,7):'—';
+const addD=(d,n)=>{const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)};
+const wkName=w=>dm(w)+'–'+dm(addD(w,6));
+const avgOf=(L,k)=>{const v=L.map(w=>w[k]).filter(x=>x!=null);return v.length?sum(v)/v.length:null};
+const share=(a,b)=>a==null||!b?null:a/b;
+/** Последняя полная неделя, прошлая, база «до», среднее 4 недель — так же, как dcWeekDigest_ в боте. */
+function prep(){
+  W=D.weeks.filter(w=>w.m1!=null);
+  PW=[...new Set(D.plats.map(p=>p.week))].sort();
+  if(!S.pw||!PW.includes(S.pw))S.pw=PW[PW.length-1]||null;
+  DG=null;if(!W.length)return;
+  const cur=W[W.length-1],prev=W[W.length-2]||null,base=W.filter(w=>w.week>=D.base[0]&&w.week<=D.base[1]),last4=W.slice(-5,-1);
+  const b={},a4={};['m1','m2','people','newPeople','payers','newPayers'].forEach(k=>{b[k]=avgOf(base,k);a4[k]=avgOf(last4,k)});
+  DG={cur,prev,base:b,avg4:a4,signals:D.signals.filter(s=>s.week===cur.week)};
+}
+const SIGC={'Трафик без захвата':'l-warn','Без меток':'l-na','Реклама стоит':'l-bad','Новые не доходят до заявки':'l-bad'};
+const sigPill=s=>`<span class="pill ${SIGC[s]||'l-na'}">${esc(s)}</span>`;
+const HST={'Идея':'l-na','В плане':'l-na','В работе':'l-warn','В тесте':'l-warn','Готово':'l-ok','Отклонено':'l-bad'};
+const hPill=s=>`<span class="pill ${HST[s]||'l-na'}">${esc(s||'Идея')}</span>`;
+function filters(){return''}
+function navFilters(){return''}
+function bindFilters(){}
+function pp(a,b){if(a==null||b==null)return'<span class="delta eq">нет сравнения</span>';const d=(a-b)*100;return`<span class="delta ${Math.abs(d)<0.5?'eq':d>0?'up':'dn'}">${d>0?'▲':d<0?'▼':'='} ${fmt(Math.abs(d),0)} п.п.</span>`}
+// карточка: [подпись, цифра, строка, переход, отклонение рядом с цифрой, серая строка]
+function kpis(list){return`<div class="grid g-kpi">${list.map(([l,v,f,g,d,m])=>`<div class="panel kpi${g?' go':''}"${g?` data-go="${g}"`:''}><div class="lbl">${l}</div><div class="val">${v}${d?`<small>${d}</small>`:''}</div><div class="foot"><span>${f}</span></div>${m?`<div class="foot"><span class="muted">${m}</span></div>`:''}</div>`).join('')}</div>`}
+const noWeeks=()=>'<div class="empty"><b>Недель ещё нет.</b> Ночной сбор запишет их в лист «Недели» — или меню таблицы «Решения → Обновить последние недели сейчас».</div>';
+
+/* ---------- Неделя ---------- */
+function vWeek(){
+  if(!DG)return noWeeks();
+  const{cur:w,prev:p,base:b,avg4:a}=DG,bn=`${wkName(D.base[0])} … ${wkName(D.base[1])}`;
+  const foot=k=>`к базе ${delta(w[k],b[k])} · к среднему 4 нед. ${delta(w[k],a[k])}`;
+  const nS=DG.signals.length,rw=n=>n%10===1&&n%100!==11?'сигнал':n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'сигнала':'сигналов';
+  const verdict=`Неделя <b>${wkName(w.week)}</b>: с наших размещений пришли <b>${fmt(w.m2)}</b> новых посетителей (к базе ${delta(w.m2,b.m2)}), `+
+    `новых людей с заявкой сайта — <b>${fmt(w.newPeople)}</b>, новых покупателей — <b>${fmt(w.newPayers)}</b>. `+(nS?`<a href="#" data-go="@signals">${nS} ${rw(nS)}</a> — что делать, на вкладке «Сигналы».`:'Сигналов нет.');
+  const L=W.slice(-12),lab=L.map(x=>wkName(x.week)),tk=i=>dm(L[i].week);
+  const lc=lineChart('c-m12',{labels:lab,series:[{name:'М1 Визиты с размещений',color:cssv('--s1'),values:L.map(x=>x.m1),area:true},{name:'М2 Новые посетители',color:cssv('--s2'),values:L.map(x=>x.m2)}],ticks:tk,height:240});
+  const b5=barChart('c-m5',{bars:L.map(x=>({label:wkName(x.week),value:x.people||0,inner:x.newPeople||0,innerColor:cssv('--s1'),color:cssv('--muted'),tip:`новые: <b>${fmt(x.newPeople)}</b> (${pct(share(x.newPeople,x.people),0)})`})),color:cssv('--muted'),ticks:tk,name:'Люди с заявкой сайта',height:200});
+  const b6=barChart('c-m6',{bars:L.map(x=>({label:wkName(x.week),value:x.payers||0,inner:x.newPayers||0,innerColor:cssv('--s2'),color:cssv('--muted'),tip:`новые: <b>${fmt(x.newPayers)}</b> (${pct(share(x.newPayers,x.payers),0)})`})),color:cssv('--muted'),ticks:tk,name:'Покупатели',height:200});
+  return`<p class="verdict">${verdict}</p>${kpis([
+    ['М1 Визиты с наших размещений',fmt(w.m1),foot('m1'),'@plats',delta(w.m1,p&&p.m1),`все визиты сайта — ${fmt(w.all)}`],
+    ['М2 Новые посетители',fmt(w.m2),foot('m2'),'@plats',delta(w.m2,p&&p.m2),`новые — ${pct(share(w.m2,w.m1),0)} от визитов`],
+    ['М5 Новые люди с заявкой',`${fmt(w.newPeople)}<small>из ${fmt(w.people)}</small>`,foot('newPeople'),'#w-m5','',`доля новых ${pct(share(w.newPeople,w.people),0)}`],
+    ['М6 Новые покупатели',`${fmt(w.newPayers)}<small>из ${fmt(w.payers)}</small>`,foot('newPayers'),'#w-m6','',`доля новых ${pct(share(w.newPayers,w.payers),0)}`],
+  ])}
+  <section class="panel sec" id="w-m12"><h2>Визиты и новые посетители с наших размещений</h2><p class="sub">Последние ${L.length} недель, пн–вс · Яндекс Метрика</p>${legend([['М1 Визиты',cssv('--s1')],['М2 Новые посетители',cssv('--s2')]])}${lc}</section>
+  <div class="grid g-2">
+  <section class="panel sec" id="w-m5"><h2>М5 Люди с заявкой сайта</h2><p class="sub">Цветом — новые: до этой заявки заявок в Букинге не было</p>${legend([['новые',cssv('--s1')],['уже были',cssv('--muted')]])}${b5}</section>
+  <section class="panel sec" id="w-m6"><h2>М6 Покупатели</h2><p class="sub">Частные лица с оплатой заявки Созвездия; цветом — первая оплата</p>${legend([['новые',cssv('--s2')],['уже покупали',cssv('--muted')]])}${b6}</section>
+  </div>
+  <section class="panel sec" id="w-table"><h2>Все недели</h2><p class="sub">База «до» — среднее недель ${esc(bn)}; строки базы отмечены</p>
+  <div class="tbl"><table><thead><tr><th>Неделя</th><th class="r">М1 Визиты</th><th class="r">М2 Новые</th><th class="r">М5 Люди с заявкой</th><th class="r">новые</th><th class="r">доля</th><th class="r">М6 Покупатели</th><th class="r">новые</th><th class="r">доля</th><th class="r">Все визиты сайта</th></tr></thead><tbody>
+  ${[...W].reverse().map(x=>{const isB=x.week>=D.base[0]&&x.week<=D.base[1];return`<tr${isB?' class="base"':''}><td class="nw">${wkName(x.week)}${isB?' <span class="muted">база</span>':''}</td><td class="r">${fmt(x.m1)}</td><td class="r">${fmt(x.m2)}</td><td class="r">${fmt(x.people)}</td><td class="r">${fmt(x.newPeople)}</td><td class="r">${pct(share(x.newPeople,x.people),0)}</td><td class="r">${fmt(x.payers)}</td><td class="r">${fmt(x.newPayers)}</td><td class="r">${pct(share(x.newPayers,x.payers),0)}</td><td class="r">${fmt(x.all)}</td></tr>`}).join('')}
+  <tr class="tot"><td class="b">База «до»</td>${['m1','m2','people','newPeople'].map(k=>`<td class="r b">${fmt(b[k])}</td>`).join('')}<td class="r">${pct(share(b.newPeople,b.people),0)}</td>${['payers','newPayers'].map(k=>`<td class="r b">${fmt(b[k])}</td>`).join('')}<td class="r">${pct(share(b.newPayers,b.payers),0)}</td><td></td></tr>
+  </tbody></table></div><p class="note">Последние недели ночной сбор пересчитывает ещё 3 недели подряд: поздние визиты и оплаты дописываются.</p></section>`;
+}
+
+/* ---------- Площадки ---------- */
+function vPlats(){
+  if(!PW.length)return'<div class="empty"><b>Площадок ещё нет.</b> Их пишет ночной сбор в лист «Площадки».</div>';
+  const wk=S.pw,i=PW.indexOf(wk),pw=PW[i-1],of=w=>D.plats.filter(p=>p.week===w);
+  const L=of(wk).sort((a,b)=>b.visits-a.visits),P={};of(pw).forEach(p=>P[p.p]=p);
+  const sg={};D.signals.filter(s=>s.week===wk).forEach(s=>(sg[s.p]||(sg[s.p]=[])).push(s.signal));
+  const tv=sum(L.map(p=>p.visits)),tn=sum(L.map(p=>p.newUsers));
+  const last=PW.slice(-8),names=[...new Set(D.plats.filter(p=>last.includes(p.week)).map(p=>p.p))];
+  const vis=(w,n)=>{const r=D.plats.find(p=>p.week===w&&p.p===n);return r?r.visits:null};
+  names.sort((a,b)=>(vis(last[last.length-1],b)||0)-(vis(last[last.length-1],a)||0));
+  const mx=Math.max(1,...names.flatMap(n=>last.map(w=>vis(w,n)||0)));
+  return`<div class="seg wk" id="f-pw" role="group" aria-label="Неделя">${PW.slice(-8).map(w=>`<button type="button" data-pick="pw:${w}" aria-pressed="${w===wk}">${wkName(w)}</button>`).join('')}</div>
+  <section class="panel sec" id="p-table"><h2>Площадки · неделя ${wkName(wk)}</h2><p class="sub">Визиты с наших размещений по площадке последнего перехода · Яндекс Метрика</p>
+  <div class="tbl"><table><thead><tr><th>Площадка</th><th class="r">М1 Визиты</th><th class="r">К прошлой неделе</th><th class="r">Посетители</th><th class="r">М2 Новые</th><th class="r">Доля новых</th><th class="r">Без utm_campaign</th><th>Сигналы</th></tr></thead><tbody>
+  ${L.map(p=>`<tr><td class="b">${esc(p.p)}</td><td class="r">${fmt(p.visits)}</td><td class="r">${P[p.p]?delta(p.visits,P[p.p].visits):'<span class="delta eq">—</span>'}</td><td class="r">${fmt(p.users)}</td><td class="r">${fmt(p.newUsers)}</td><td class="r">${pct(share(p.newUsers,p.users),0)}</td><td class="r">${pct(share(p.noUtm,p.visits),0)}</td><td>${(sg[p.p]||[]).map(sigPill).join(' ')}</td></tr>`).join('')}
+  <tr class="tot"><td class="b">Итого = М1</td><td class="r b">${fmt(tv)}</td><td></td><td></td><td class="r b">${fmt(tn)}</td><td></td><td></td><td></td></tr>
+  </tbody></table></div><p class="note">«Без utm_campaign» у «Сайтов, блогеров» и «Дзена» — нормально: ссылки там ставим не мы. Захват почты (подписки по площадке) появится с базой DashaMail и метками (#109).</p></section>
+  <section class="panel sec" id="p-heat"><h2>Визиты по площадкам за ${last.length} недель</h2><p class="sub">Цвет — от наибольшего значения в таблице</p>
+  <div class="tbl"><table class="heat"><thead><tr><th>Площадка</th>${last.map(w=>`<th class="r">${dm(w)}</th>`).join('')}</tr></thead><tbody>
+  ${names.map(n=>`<tr><td class="b">${esc(n)}</td>${last.map(w=>{const v=vis(w,n);return`<td class="hm" style="background:${v==null?'transparent':CMIX?`color-mix(in srgb,var(--s1) ${Math.round(8+v/mx*55)}%,transparent)`:'var(--surface2)'}">${v==null?'—':fmt(v)}</td>`}).join('')}</tr>`).join('')}
+  </tbody></table></div></section>`;
+}
+
+/* ---------- Сигналы ---------- */
+function vSignals(){
+  const wk=DG?DG.cur.week:null,cur=DG?DG.signals:[];
+  const hist=[...new Set(D.signals.map(s=>s.week))].sort().reverse().filter(w=>w!==wk);
+  return`<section class="panel sec" id="g-now"><h2>Сигналы недели ${wk?wkName(wk):''}</h2><p class="sub">Что бот заметил по правилам ниже и что советует сделать</p>
+  ${cur.length?`<div class="grid g-2">${cur.map(s=>`<div class="panel sig"><div>${sigPill(s.signal)} <b>${esc(s.p)}</b></div><p><b>${esc(s.value)}</b></p><p class="muted">${esc(s.rule)}</p><p>👉 ${esc(s.action)}</p></div>`).join('')}</div>`:'<div class="empty">Сигналов за неделю нет 👍</div>'}</section>
+  ${hist.length?`<section class="panel sec" id="g-hist"><h2>Прошлые недели</h2><div class="tbl"><table><thead><tr><th>Неделя</th><th>Площадка</th><th>Сигнал</th><th>Значение</th></tr></thead><tbody>
+  ${hist.flatMap(w=>D.signals.filter(s=>s.week===w)).map(s=>`<tr><td class="nw">${wkName(s.week)}</td><td>${esc(s.p)}</td><td>${sigPill(s.signal)}</td><td>${esc(s.value)}</td></tr>`).join('')}</tbody></table></div></section>`:''}
+  <section class="panel sec" id="g-rules"><h2>Правила сигналов</h2><p class="sub">Пороги предварительные (утверждены 26.10.2026), уточняются по опыту</p>
+  <div class="tbl"><table><thead><tr><th>Сигнал</th><th>Когда</th><th>Что сделать</th></tr></thead><tbody>
+  <tr><td>${sigPill('Трафик без захвата')}</td><td>300+ визитов площадки за неделю, подписок 0 (пока база DashaMail не запущена — у всех площадок)</td><td>поставить поп-ап или лендинг с подарком для площадки</td></tr>
+  <tr><td>${sigPill('Без меток')}</td><td>больше 10% визитов площадки без utm_campaign, от 50 визитов; кроме «Сайтов, блогеров» и «Дзена»</td><td>поправить ссылки по справочнику UTM (#109)</td></tr>
+  <tr><td>${sigPill('Реклама стоит')}</td><td>визиты площадки упали больше чем вдвое к среднему за 4 недели (среднее от 50)</td><td>спросить владельца канала, почему площадка просела</td></tr>
+  <tr><td>${sigPill('Новые не доходят до заявки')}</td><td>М2 растёт 2 недели подряд, а М5 нет</td><td>проверить страницу входа и форму заявки</td></tr>
+  </tbody></table></div></section>`;
+}
+
+/* ---------- Гипотезы ---------- */
+function vHyp(){
+  const H=D.hyp,cnt=s=>H.filter(h=>h.status===s).length;
+  const F={all:['Все',()=>true],work:['В работе и в тесте',h=>h.status==='В работе'||h.status==='В тесте'],next:['Идеи и план',h=>h.status==='Идея'||h.status==='В плане'],done:['Готово',h=>h.status==='Готово'],no:['Отклонено',h=>h.status==='Отклонено']};
+  if(!F[S.hs])S.hs='all';
+  const L=H.filter(F[S.hs][1]).sort((a,b)=>(b.ice==null?-1:b.ice)-(a.ice==null?-1:a.ice));
+  return kpis([
+    ['Всего гипотез',fmt(H.length),'реестр — лист «Гипотезы»','','',''],
+    ['В работе и в тесте',fmt(cnt('В работе')+cnt('В тесте')),`в тесте ${fmt(cnt('В тесте'))}`,'','',''],
+    ['Идеи и план',fmt(cnt('Идея')+cnt('В плане')),`в плане ${fmt(cnt('В плане'))}`,'','',''],
+    ['Готово',fmt(cnt('Готово')),`отклонено ${fmt(cnt('Отклонено'))}`,'','',''],
+  ])+`<section class="panel sec" id="h-list"><h2>Гипотезы по ICE</h2><p class="sub">ICE = влияние × уверенность × простота (каждое 1–10). Оценки — черновик, проверяются с Романом</p>
+  <div class="seg" id="f-hs" role="group" style="margin:4px 0 12px">${Object.keys(F).map(k=>`<button type="button" data-pick="hs:${k}" aria-pressed="${S.hs===k}">${F[k][0]}</button>`).join('')}</div>
+  <div class="tbl"><table><thead><tr><th>ID</th><th>Гипотеза</th><th>Категория</th><th class="r">ICE</th><th class="r">В · У · П</th><th>Статус</th><th>Карточка</th><th>Комментарий Романа</th></tr></thead><tbody>
+  ${L.map(h=>`<tr><td class="nw b">${esc(h.id)}</td><td class="wide-t">${esc(h.text)}${h.how?`<details class="how"><summary>Как проверить</summary>${esc(h.how)}${h.expect?`<br><b>Ожидаем:</b> ${esc(h.expect)}`:''}</details>`:''}</td><td>${esc(h.cat)}</td><td class="r b">${h.ice==null?'—':fmt(h.ice)}</td><td class="r nw muted">${[h.i,h.c,h.e].map(v=>v==null?'—':v).join(' · ')}</td><td>${hPill(h.status)}</td><td class="nw">${esc(h.card)}</td><td>${esc(h.comment)}</td></tr>`).join('')||'<tr><td colspan="8" class="muted">Нет гипотез с таким статусом</td></tr>'}
+  </tbody></table></div><p class="note">Править гипотезы, оценки и статусы — в таблице «Решения Созвездия», лист «Гипотезы»; отчёт подхватит правку в течение часа или по «Обновить данные».</p></section>`;
+}
+
+/* ---------- Тесты ---------- */
+function vTests(){
+  const T=D.tests,act=T.filter(t=>['','Идёт','Продлить'].includes(t.decision));
+  const dec={'Внедрить':'l-ok','Отказаться':'l-bad','Продлить':'l-warn','Идёт':'l-warn'};
+  const v=x=>x==null?'—':Math.abs(x)<1&&x!==0?pct(x,1):fmt(x,Number.isInteger(x)?0:1);
+  if(!T.length)return`<div class="empty"><b>Тестов пока нет.</b> Тест — строка в листе «Тесты» таблицы «Решения Созвездия»: что делаем, площадка, метрика, даты, тестовая и контрольная группы, база «до». Результат теста и контроля, разница и решение — после конца теста.</div>`;
+  return kpis([['Тестов в работе',fmt(act.length),'без решения, «Идёт» или «Продлить»','','',''],['Внедрить',fmt(T.filter(t=>t.decision==='Внедрить').length),'сработало','','',''],['Отказаться',fmt(T.filter(t=>t.decision==='Отказаться').length),'не сработало','','','']])+
+  `<section class="panel sec" id="t-list"><h2>Тесты против контроля</h2><p class="sub">Разница = результат теста − результат контроля</p>
+  <div class="tbl"><table><thead><tr><th>ID</th><th>Гипотеза</th><th>Что делаем</th><th>Площадка</th><th>Метрика</th><th>Даты</th><th class="r">База «до»</th><th class="r">Тест</th><th class="r">Контроль</th><th class="r">Разница</th><th class="r">Эффект</th><th>Решение</th><th>Владелец</th></tr></thead><tbody>
+  ${T.map(t=>`<tr><td class="nw b">${esc(t.id)}</td><td class="nw">${esc(t.hyp)}</td><td class="wide-t">${esc(t.what)}</td><td>${esc(t.channel)}</td><td>${esc(t.metric)}</td><td class="nw">${fd(t.start)}–${fd(t.end)}</td><td class="r">${v(t.base)}</td><td class="r">${v(t.res)}</td><td class="r">${v(t.resCtrl)}</td><td class="r b">${v(t.diff)}</td><td class="r">${t.effect==null?'—':rub(t.effect)}</td><td>${t.decision?`<span class="pill ${dec[t.decision]||'l-na'}">${esc(t.decision)}</span>`:'<span class="muted">—</span>'}</td><td>${esc(t.owner)}</td></tr>`).join('')}
+  </tbody></table></div></section>`;
+}
+
+/* ---------- клики, render ---------- */
+function viewClick(e){
+  const p=e.target.closest('[data-pick]');
+  if(p){const[k,v]=p.dataset.pick.split(':');histPush();S[k]=v;save();render();navState();return}
+  const g=e.target.closest('[data-go]');
+  if(g){e.preventDefault();const t=g.dataset.go;
+    if(t.startsWith('#')){const el=document.getElementById(t.slice(1));if(el){el.scrollIntoView({block:'start'});el.classList.add('flash')}return}
+    if(t.startsWith('@')){const[tab,sec]=t.slice(1).split('#');histPush();S.tab=tab;save();render();navState();if(sec)requestAnimationFrame(()=>{const el=document.getElementById(sec);if(el){el.scrollIntoView({block:'start'});el.classList.add('flash')}});else window.scrollTo({top:0})}}
+}
+
+const CMIX=!!(window.CSS&&CSS.supports&&CSS.supports('color','color-mix(in srgb,red 50%,blue)'));
+/* Обёртка отрисовки: 1) после вставки меряет графики и при другой ширине перерисовывает (один раз);
+   2) первая отрисовка вкладки за сеанс — «появление» (класс .intro, снимается через 2 с), числа карточек считаются от нуля;
+   3) повторная (период, свежие данные, поворот экрана) — без появления, изменившиеся числа плавно переходят от прежних. */
+const SEEN={},KPIV={};let RTAB='';
+const MOTION=!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+function render(){
+  const prev=kpiRead(),intro=!!D&&!SEEN[S.tab],same=RTAB===S.tab;
+  for(let p=0;p<2;p++){renderTab();if(!D||!fitCharts())break}
+  if(!D)return;SEEN[S.tab]=1;RTAB=S.tab;const v=$('#view');
+  if(intro&&MOTION){v.classList.add('intro');v.querySelectorAll('.panel').forEach((el,k)=>el.style.setProperty('--k',Math.min(k,6)));
+    clearTimeout(render.t);render.t=setTimeout(()=>v.classList.remove('intro'),2000)}
+  kpiTween(intro?null:same?prev:{},intro);
+  markWide();navHeight();pinFilters();
+}
+/** Таблица шире карточки — своя прокрутка вбок и по высоте, заголовок прилипает к её верху (иначе вылезала за карточку). */
+function markWide(){document.querySelectorAll('#view .tbl').forEach(b=>{const t=b.querySelector('table');if(t)b.classList.toggle('wide',t.scrollWidth>b.clientWidth+1)})}
+/** Фильтры ушли под строку вкладок — показать их копию в этой строке. */
+function pinFilters(){const f=$('#filters'),n=$('#tabs');if(!f||!n)return;
+  const on=innerWidth>760&&f.getBoundingClientRect().bottom<n.getBoundingClientRect().bottom;
+  if(document.body.classList.contains('pinned')!==on){document.body.classList.toggle('pinned',on);navHeight()}}
+addEventListener('scroll',pinFilters,{passive:true});
+/** Ширина каждого графика на странице; true — если хоть один нарисован не под свою ширину (нужно перерисовать). */
+function fitCharts(){let ch=false;
+  document.querySelectorAll('#view svg[role="img"][id]').forEach(s=>{const p=s.parentElement,cs=getComputedStyle(p);
+    const w=Math.round((p.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight))/10)*10;
+    if(w>=240&&Math.abs((CWID[s.id]||760)-w)>12){CWID[s.id]=w;ch=true}});return ch}
+// числа карточек и «героев»: ключ — подпись карточки, значение — текст числа
+function kpiEls(){return[...document.querySelectorAll('#view .kpi .val,#view .hero .big')]}
+function kpiKey(el,i){const p=el.closest('.kpi,.panel');const l=p&&p.querySelector('.lbl,h2');return(l?l.textContent.trim():'#'+i)}
+function kpiRead(){const m={};kpiEls().forEach((el,i)=>{const t=el.firstChild;if(t&&t.nodeType===3)m[kpiKey(el,i)]=t.nodeValue});return m}
+function kpiParse(s){const m=String(s).match(/^(\D*?)(-?[\d\u00a0\u202f ]*\d(?:,\d+)?)(\D*)$/);if(!m)return null;
+  return{pre:m[1],suf:m[3],v:parseFloat(m[2].replace(/[\u00a0\u202f ]/g,'').replace(',','.')),d:(m[2].split(',')[1]||'').length}}
+/** prev=null — счёт от нуля (появление), иначе от прежнего значения той же карточки; одинаковые не трогаем. */
+function kpiTween(prev,intro){
+  if(!MOTION)return;const t0=performance.now(),dur=intro?900:650,jobs=[];
+  kpiEls().forEach((el,i)=>{const t=el.firstChild;if(!t||t.nodeType!==3)return;const to=kpiParse(t.nodeValue);if(!to||!isFinite(to.v))return;
+    const was=prev?prev[kpiKey(el,i)]:null;if(prev&&was==null)return;if(prev&&was===t.nodeValue)return;
+    const from=prev?kpiParse(was):{v:0};if(!from||!isFinite(from.v))return;
+    if(prev)el.classList.add('upd');jobs.push({t,to,from:from.v,end:t.nodeValue})});
+  if(!jobs.length)return;
+  const step=now=>{const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);
+    jobs.forEach(j=>{j.t.nodeValue=k>=1?j.end:j.to.pre+fmt(j.from+(j.to.v-j.from)*e,j.to.d)+j.to.suf});
+    if(k<1)requestAnimationFrame(step)};
+  requestAnimationFrame(step)}
+// поворот экрана, окно Telegram шире/уже — перерисовать графики под новую ширину (без появления)
+let rzT=0,rzW=innerWidth;addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(D&&Math.abs(innerWidth-rzW)>30){rzW=innerWidth;render()}},250)});
+function renderTab(){
+  $('#tabs').innerHTML=TABS.map(([k,l])=>`<button role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${l}</button>`).join('')+navFilters();
+  $('#tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(!b)return;if(e.detail)b.blur();if(D)go(b.dataset.tab)};
+  hideTip();if(!D)return;
+  $('#filters').innerHTML=filters();bindFilters();
+  $('#view').onclick=viewClick;
+  const f={week:vWeek,plats:vPlats,signals:vSignals,hyp:vHyp,tests:vTests}[S.tab]||(S.tab='week',vWeek);
+  try{$('#view').innerHTML=f()}catch(err){$('#view').innerHTML=`<div class="err"><b>Ошибка вкладки.</b> ${esc(err.message)}</div>`;console.error(err)}
+  const slot=$('#dq-slot');if(slot)slot.innerHTML=dqBlock();
+}
+function dqBlock(){
+  const W2=[],U=D.updates||[],ok=U.filter(u=>/^готово/.test(u.result)),last=ok[ok.length-1],bad=U.length&&!/^готово/.test(U[U.length-1].result)?U[U.length-1]:null;
+  if(bad)W2.push({level:'bad',text:`${bad.what} ${bad.at.replace('T',' ')}: ${bad.result}`});
+  if(last){const h=(Date.now()-new Date(last.at).getTime())/36e5;W2.push(h>30?{level:'warn',text:`Недели обновлены ${Math.round(h/24)} дн назад — ночное обновление не сработало?`}:{level:'ok',text:`Недели обновлены ${last.at.replace('T',' ')} (${last.what}), недели ${last.weeks}`});
+    if(/расхождения/.test(last.result))W2.push({level:'info',text:'Сверка Метрики: '+last.result.replace(/^готово;\s*/,'')})}
+  else W2.push({level:'warn',text:'Ночной сбор ещё не записал ни одной недели'});
+  W2.push({level:'info',text:'Пока не считаются: М3 и М4 (подписки — после базы DashaMail и меток #109), М7 (подписчик → покупатель), М8 (цена — после доступа к расходам #15)'});
+  W2.push({level:'info',text:'«Оформить» в Метрике — нажатие кнопки, не заявка: заявки и оплаты — только из Букинга'});
+  const lv={bad:0,warn:1,ok:2,info:3};
+  return`<details class="panel dq"><summary>Качество данных · ${W2.length}</summary><ul>${W2.sort((a,b)=>lv[a.level]-lv[b.level]).map(w=>`<li class="${w.level}"><span>${esc(w.text)}</span></li>`).join('')}</ul></details>`;
+}
+/* Последний ответ сервера хранится на устройстве (IndexedDB, {v: метка сборки, d: JSON}): при открытии отчёт рисуется
+   сразу из него, свежие данные приходят следом и заменяют его, только если отличаются. Нет доступа — копия стирается. */
+const LC_KEY='dc-last';let LC_SHOWN='';
+function lcDb(){return new Promise((res,rej)=>{const r=indexedDB.open('sz-cache',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function lcGet(){if(!window.indexedDB)return Promise.resolve(null);return lcDb().then(db=>new Promise(res=>{const q=db.transaction('kv').objectStore('kv').get(LC_KEY);q.onsuccess=()=>{const v=q.result;res(v?typeof v==='string'?{v:'',d:v}:v:null)};q.onerror=()=>res(null)})).catch(()=>null)}
+function lcPut(v){lcDb().then(db=>{const s=db.transaction('kv','readwrite').objectStore('kv');v==null?s.delete(LC_KEY):s.put(v,LC_KEY)}).catch(()=>{})}
+/* Этап 2 (#58): страница лежит на GitHub Pages рядом с обёрткой, данные — запросом к Apps Script (doPost).
+   SZ_API (адрес /exec) подставляет сборка tools/miniapp_build.py. text/plain — без предварительного запроса CORS.
+   have — метка сборки копии на устройстве: сервер ответит {"__same":1} без данных, если она не изменилась.
+   Обёртка начинает тот же запрос сразу при открытии (SZ_PREFETCH) — страница забирает его ответ, а не ждёт свой. */
+function szApi(fn,args){
+  return fetch(window.SZ_API,{method:'POST',body:JSON.stringify(Object.assign({fn},args)),redirect:'follow',credentials:'omit'})
+    .then(r=>{if(!r.ok)throw new Error('Сервер ответил '+r.status);return r.text()}).then(szErr)}
+function szErr(t){if(t.startsWith('{"__error"'))throw new Error(JSON.parse(t).__error);return t}
+function szPrefetch(init){try{const p=parent!==window&&parent.SZ_PREFETCH;if(p&&p.init===init){parent.SZ_PREFETCH=null;return p.res.then(szErr)}}catch(e){}return null}
+// подписи заглушки меняются, пока данных нет (первое открытие на устройстве)
+const SK_MSG=['Загружаю данные…','Собираю недели…','Сверяю площадки…','Проверяю сигналы…','Раскладываю гипотезы…'];
+(function skRun(k){const el=document.getElementById('sk-msg');if(!el||D)return;
+  setTimeout(()=>{const e=document.getElementById('sk-msg');if(!e||D)return;e.style.opacity=0;
+    setTimeout(()=>{e.textContent=SK_MSG[(k+1)%SK_MSG.length];e.style.opacity=1;skRun(k+1)},250)},1600)})(0);
+function load(force){
+  document.body.classList.add('busy');
+  const btns=document.querySelectorAll('.js-refresh:not(.js-refresh-m)'),mb=document.querySelector('.js-refresh-m');
+  btns.forEach(b=>{b.disabled=true;b.textContent='Обновляю…'});if(mb){mb.disabled=true;mb.classList.add('busy')}
+  const reset=()=>{document.body.classList.remove('busy');btns.forEach(b=>{b.disabled=false;b.textContent='Обновить данные'});if(mb){mb.disabled=false;mb.classList.remove('busy')}};
+  let fresh=false;   // ответ сервера уже пришёл — копию с устройства не показываем
+  const fail=e=>{reset();fresh=true;const a=authMsg(e);
+    if(a){lcPut(null);LC_SHOWN='';D=null}
+    else if(D&&LC_SHOWN){stamp(false);$('#stamp').textContent+=' · не удалось обновить';return}   // остаются показанные данные
+    $('#filters').innerHTML='';$('#view').innerHTML=a?`<div class="err">${a}</div>`:`<div class="err"><b>Не удалось загрузить данные.</b> ${esc(e&&e.message||e)}</div>`};
+  const done=(res,cached,ver)=>{if(cached&&fresh)return;
+    const str=typeof res==='string'?res:JSON.stringify(res);
+    if(!cached){reset();fresh=true;lcPut({v:ver||'',d:str});if(str===LC_SHOWN&&D){stamp(false);return}}
+    try{D=JSON.parse(str);prep();LC_SHOWN=str;stamp(cached);
+    const pe=$('#period');pe.hidden=false;pe.innerHTML=`<b>Объём данных.</b> ${fmt(W.length)} недель${W.length?` (${wkName(W[0].week)} … ${wkName(W[W.length-1].week)})`:''} · ${fmt(D.hyp.length)} гипотез · ${fmt(D.tests.length)} тестов`;
+    if(!applyGo())render()}catch(e){if(cached){D=null;LC_SHOWN='';lcPut(null);return}fail(e);console.error(e)}};
+  const stamp=wait=>{const g=new Date(D.data_at||D.generated_at),p2=n=>String(n).padStart(2,'0');
+    $('#stamp').textContent=`Данные на ${p2(g.getDate())}.${p2(g.getMonth()+1)}.${g.getFullYear()} ${p2(g.getHours())}:${p2(g.getMinutes())}`+(wait?' · обновляю…':'')};
+  const lc=!force&&!D?lcGet():Promise.resolve(null);
+  lc.then(v=>{if(v)done(v.d,true)});
+  // ответ doPost: {"__v":"…","d":{…}} — данные; {"__same":1} — копия на устройстве актуальна
+  const got=(t,init)=>{
+    if(t==='{"__same":1}')return lc.then(v=>v?done(v.d,false,v.v):szApi('data',{init}).then(t2=>got(t2,init)));
+    const m=t.match(/^\{"__v":("(?:[^"\\]|\\.)*"),"d":/);
+    return m?done(t.slice(m[0].length,-1),false,JSON.parse(m[1])):done(t,false,'')};
+  if(window.google&&google.script&&google.script.run)TG_INIT.then(i=>SZ_LOGIN||i).then(init=>google.script.run.withSuccessHandler(done).withFailureHandler(fail).getDecisionsData(!!force,init));
+  else if(window.SZ_API)Promise.all([TG_INIT.then(i=>SZ_LOGIN||i),lc]).then(([init,v])=>
+    ((!force&&szPrefetch(init))||szApi('data',{force:!!force,init,have:v&&v.v||''})).then(t=>got(t,init))).catch(fail);   // страница с GitHub Pages
+  else if(window.DC_PAYLOAD)setTimeout(()=>done(window.DC_PAYLOAD),0);
+  else fail('Страница открыта вне Apps Script, данных нет.');
+}
+document.querySelectorAll('.js-refresh').forEach(b=>b.onclick=e=>{if(e.detail)b.blur();load(true)});
+
+/* ---------- Telegram: initData из страницы-обёртки ---------- */
+/* Обёртка может быть не самым верхним окном: в веб-версии Telegram цепочка web.telegram.org → обёртка → script.google.com → отчёт.
+   Поэтому сообщения шлём всем родительским окнам, а ответ принимаем от любого из них. */
+const SZ_UP=(()=>{const a=[];let w=window;try{while(w!==w.parent&&a.length<6){w=w.parent;a.push(w)}}catch(e){}return a})();
+function toWrap(msg){SZ_UP.forEach(w=>{try{w.postMessage(msg,'*')}catch(e){}})}
+let SZ_LOGIN='';   // вход из браузера (виджет Telegram Login в обёртке): «login:…»
+const TG_INIT=new Promise(res=>{
+  if(window.top===window){res('');return}
+  let got=false;
+  addEventListener('message',e=>{if(SZ_UP.indexOf(e.source)<0||!e.data)return;
+    if(e.data.type==='sz-tg'){got=true;fsState(e.data);if(e.data.go)GO=String(e.data.go);res(e.data.initData||'')}
+    if(e.data.type==='sz-fs')fsState(e.data);
+    if(e.data.type==='sz-login'&&/^login:/.test(e.data.initData||'')){SZ_LOGIN=String(e.data.initData);load(false)}
+    if(e.data.type==='sz-go'){GO=String(e.data.go);if(D){histPush();applyGo()}}});   // новая ссылка в открытом приложении
+  try{toWrap({type:'sz-hello'})}catch(e){}
+  setTimeout(()=>{if(!got)res('')},800);
+});
+function authMsg(e){
+  const m=String(e&&e.message||e);
+  if(/AUTH_DENIED:(\d+)/.test(m))return`<b>Нет доступа к отчёту.</b> Ваш Telegram ID: <b>${m.match(/AUTH_DENIED:(\d+)/)[1]}</b>. `+({sent:'Запрос отправлен администратору — когда он подтвердит, бот пришлёт сообщение.',repeat:'Запрос уже отправлен недавно.',noadmin:'В списке доступа нет администратора — передайте этот ID ему.'}[(m.match(/AUTH_DENIED:\d+:(\w+)/)||[])[1]]||'Передайте этот ID администратору.');
+  if(/AUTH_TG/.test(m)){   // нужен вход: обёртка в браузере покажет кнопку «Войти через Telegram» для этого бота
+    const bot=(m.match(/AUTH_TG:([A-Za-z0-9_]{3,})/)||[])[1]||'';
+    if(window.top!==window&&bot)try{toWrap({type:'sz-need-login',bot:bot})}catch(e){}
+    return'<b>Нужен вход.</b> В Telegram — откройте отчёт заново кнопкой в чате с ботом. В браузере — нажмите «Войти через Telegram» и подтвердите вход в Telegram (вход запомнится на 7 дней).'}
+  if(/AUTH_SETUP/.test(m))return'<b>Доступ ещё не настроен.</b> '+esc(m.replace(/^.*AUTH_SETUP:\s*/,''));
+  return null;
+}
+/* ---------- масштаб 80–130 % и полный экран (кнопка видна, если обёртка Telegram это умеет) ---------- */
+const ZOOMS=[0.8,0.9,1,1.1,1.2,1.3];
+let zoom=1;try{const z=+localStorage.getItem('dc-zoom');if(ZOOMS.includes(z))zoom=z}catch(e){}
+function applyZoom(z){zoom=z;document.documentElement.style.zoom=z;const v=document.querySelector('.zoom-val');if(v)v.textContent=Math.round(z*100)+'%';
+  document.querySelector('[data-zoom="-1"]').disabled=z<=ZOOMS[0];document.querySelector('[data-zoom="1"]').disabled=z>=ZOOMS[ZOOMS.length-1];
+  try{localStorage.setItem('dc-zoom',z)}catch(e){}
+  if(typeof fitHeader==='function')fitHeader();if(typeof navHeight==='function')navHeight()}
+function stepZoom(d){const i=ZOOMS.indexOf(zoom);applyZoom(d===0?1:ZOOMS[Math.max(0,Math.min(ZOOMS.length-1,i+d))]);hideTip()}
+document.querySelector('.zoom').onclick=e=>{const b=e.target.closest('[data-zoom]');if(!b)return;if(e.detail)b.blur();stepZoom(+b.dataset.zoom)};
+if(window.top!==window)addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey))return;
+  const d={'=':1,'+':1,'-':-1,'_':-1,'0':0}[e.key];if(d===undefined)return;e.preventDefault();stepZoom(d)});
+applyZoom(zoom);
+const FS_ICON={
+  on:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  off:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
+function fsState(d){if(!d.canFullscreen)return;document.querySelectorAll('#btn-fs,.js-fs').forEach(b=>{b.hidden=false;b.innerHTML=d.isFullscreen?FS_ICON.off:FS_ICON.on;b.title=b.ariaLabel=d.isFullscreen?'Открыть в окне':'Во весь экран'});if(typeof fitHeader==='function')fitHeader()}
+document.querySelectorAll('#btn-fs,.js-fs').forEach(b=>b.onclick=e=>{if(e.detail)e.currentTarget.blur();try{toWrap({type:'sz-fs-toggle'})}catch(err){}});
+
+/* ---------- тема ---------- */
+// Значки темы с заливкой: луна — цветом значков, солнце — фирменным оранжевым
+const ICON={moon:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20.5 12.8A8.5 8.5 0 1 1 11.2 3.5a6.6 6.6 0 0 0 9.3 9.3z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  sun:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="color:var(--orange)"><circle cx="12" cy="12" r="4.6" fill="currentColor"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'};
+function applyTheme(t){document.documentElement.dataset.theme=t;document.querySelectorAll('#btn-theme,.js-theme').forEach(b=>{b.innerHTML=t==='dark'?ICON.sun:ICON.moon;b.title=b.ariaLabel='Включить '+(t==='dark'?'светлую':'тёмную')+' тему'});
+  if(window.top!==window)try{toWrap({type:'sz-theme',theme:t,bg:cssv('--bg')})}catch(e){}}
+let theme='light';try{if(localStorage.getItem('dc-theme')==='dark')theme='dark'}catch(e){}
+applyTheme(theme);
+document.querySelectorAll('#btn-theme,.js-theme').forEach(b=>b.onclick=e=>{if(e.detail)e.currentTarget.blur();theme=theme==='dark'?'light':'dark';try{localStorage.setItem('dc-theme',theme)}catch(err){}applyTheme(theme);render()});
+$('#method').innerHTML='<div id="dq-slot"></div><p id="period" class="ref-info" hidden></p><h3>Как считается</h3><dl>'+[
+  ['Неделя','Понедельник–воскресенье по Москве.','Ночной сбор каждый день около 5:10 МСК пересчитывает 3 последние полные недели: поздние визиты и оплаты за них ещё дописываются. Текущая неделя не показывается, пока не закончилась.'],
+  ['М1 Визиты с наших размещений','Сколько визитов на сайт привели наши размещения.','Визиты на s-cruises.com и go.s-cruises.com (без dev) с рекламы, рассылок, соцсетей, мессенджеров, чужих сайтов и рекомендаций (Дзен); площадка — по последнему переходу. Яндекс Метрика, счётчик 56423212.'],
+  ['М2 Новые посетители','Сколько людей пришло на сайт впервые.','Посетители, у которых это первый визит на сайт, с тех же площадок. «Новый» = новая кука: человек с другого устройства тоже новый.'],
+  ['М5 Новые люди с заявкой','Новые люди, оставившие заявку на сайте.','Аккаунт Букинга с заявкой сайта за неделю, у которого до первой заявки сайта этой недели заявок не было. «Из» — все люди с заявкой сайта за неделю.'],
+  ['М6 Новые покупатели','Кто впервые купил круиз Созвездия.','Частные лица с оплатой заявки Созвездия (статусы «Оплачено», «Предоплата»); неделя — по первой оплате заявки; новый — раньше оплаченных заявок Созвездия не было. «Из» — все оплатившие за неделю.'],
+  ['База «до»','С чем сравниваем.','Среднее недель 14.09–04.10 (до запуска мер по новой аудитории). Ещё сравнение — с прошлой неделей и со средним 4 недель перед последней.'],
+  ['Сигналы','Что бот заметил и что советует.','Правила и пороги — на вкладке «Сигналы»; считаются по последней полной неделе после ночного сбора.'],
+  ['Гипотезы и ICE','Что пробовать дальше.','Реестр — лист «Гипотезы» таблицы «Решения Созвездия». ICE = влияние × уверенность × простота, каждое от 1 до 10; оценки — черновик, проверяются с Романом.'],
+  ['Тесты','Сработало ли.','Тест против контроля: тестовая и контрольная группы, одна метрика, база «до». Разница = результат теста − результат контроля. Решение: внедрить, продлить или отказаться.'],
+  ['Обновление','Цифры за прошлую неделю — утром.','Метрика и Букинг — каждую ночь; гипотезы и тесты — как их правят в таблице (отчёт видит правку в течение часа или по «Обновить данные»).']
+].map(([t,m,d])=>`<div><dt>${t}</dt><dd>${esc(m)}<details class="how"><summary>Как считаем</summary>${esc(d)}</details></dd></div>`).join('')+'</dl>';
+/** Телефон: название — в одну строку; кнопка обновления ужимается, пока строка заголовка не влезет. */
+function fitHeader(){
+  const h1=document.querySelector('.brand h1'),ma=document.querySelector('.m-actions'),t=h1&&h1.querySelector('.h1-title');
+  if(!h1||!ma||!t)return;
+  t.style.fontSize='';
+  if(getComputedStyle(ma).display==='none')return;
+  // название не сжимается: сравниваем его полную ширину + кнопки с шириной строки
+  const fits=()=>{const gap=parseFloat(getComputedStyle(h1).columnGap)||12;return t.scrollWidth+gap+ma.getBoundingClientRect().width<=h1.clientWidth+1};
+  for(const mode of ['','fit-short','fit-icon']){
+    ma.classList.remove('fit-short','fit-icon');if(mode)ma.classList.add(mode);
+    if(fits())return;
+  }
+  // кнопка уже кружок, а не влезает — уменьшаем шрифт названия (не мельче 17 px)
+  for(let px=parseFloat(getComputedStyle(t).fontSize)-1;px>=17&&!fits();px--)t.style.fontSize=px+'px';
+}
+addEventListener('resize',fitHeader);
+/** Вкладки не помещаются в одну строку — фильтры в прилипшей строке встают отдельной строкой под ними (не вперемешку с вкладками). */
+function navSplit(n){const b=n.querySelectorAll(':scope>button');if(!b.length)return;n.classList.remove('split','split2');
+  const t0=b[0].offsetTop,o=[...n.children].find(x=>x.tagName!=='BUTTON'&&x.getClientRects().length);
+  // не помещается в одну строку: вкладки переносятся, фильтры ушли под вкладки или подпись в фильтре обрезана многоточием
+  const cut=o&&[...o.querySelectorAll('*')].some(e=>e.scrollWidth>e.clientWidth+1&&getComputedStyle(e).textOverflow==='ellipsis');
+  if(innerWidth<=760||![...b].some(x=>x.offsetTop!==t0)&&!(o&&(o.offsetTop>=t0+b[0].offsetHeight||cut)))return;
+  // 60 на 40: слева вкладки (60 %, до двух строк), справа фильтры (40 %, до двух строк); не влезло — фильтры своей строкой
+  if(o){n.classList.add('split2');const h=Math.ceil(o.getBoundingClientRect().height);n.style.setProperty('--fh',h+'px');
+    if(new Set([...b].map(x=>x.offsetTop)).size<=2&&h<=90)return;n.classList.remove('split2')}
+  n.classList.add('split')}
+function navHeight(){const n=document.getElementById('tabs');if(!n)return;navSplit(n);document.documentElement.style.setProperty('--nav-h',n.getBoundingClientRect().height+'px')}
+addEventListener('resize',()=>{navHeight();markWide();pinFilters()});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitHeader);
+render();load(false);navState();fitHeader();navHeight();
+window.__szBoot=1;
+</script>
+</body>
+</html>
