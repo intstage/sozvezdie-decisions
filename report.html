@@ -374,13 +374,15 @@ table.heat td.hm{text-align:center;font-size:12.5px;color:var(--ink);min-width:4
 @media (max-width:560px){#f-y{grid-template-columns:repeat(4,1fr)}#f-vst,#f-rsort{grid-template-columns:repeat(2,1fr)}}
 
 /* Решения: карточки сигналов, гипотезы и тесты */
-.sig p{margin:6px 0 0;font-size:13.5px}.sig p.muted{font-size:12.5px}
+/* карточка сигнала (не .sig — этот класс у каркаса занят списком с нулевыми отступами) */
+.sig-card{display:flex;flex-direction:column;gap:8px}.sig-card p{margin:0;font-size:13.5px;line-height:1.45}.sig-card p.muted{font-size:12.5px}.sig-card .act{margin-top:auto;padding-top:4px}
 td .how{margin-top:3px;font-size:12.5px;color:var(--muted)}td .how summary{cursor:pointer;color:var(--link);width:max-content}
 td.wide-t{min-width:260px;max-width:440px}
 #t-list td:nth-child(5),#t-list td:nth-child(4){min-width:120px}
 tr.base td{background:var(--surface2)}
-.seg.wk{flex-wrap:nowrap;overflow-x:auto;max-width:100%;margin:0 0 16px}.seg.wk button{white-space:nowrap}
-@media (max-width:560px){.seg.wk{display:flex}#f-hs{grid-template-columns:repeat(2,1fr)}}
+.seg.wk{flex-wrap:nowrap;overflow-x:auto;max-width:100%;margin:0 0 16px;gap:2px}.seg.wk button{white-space:nowrap;flex:none}
+/* телефон: недели — сеткой по 3 в ряд (как другие переключатели), не строкой без отступов */
+@media (max-width:560px){.seg.wk{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;overflow:visible}.seg.wk button{padding:6px 2px}#f-hs{grid-template-columns:repeat(2,1fr);gap:3px}}
 </style>
 </head>
 <body>
@@ -648,7 +650,7 @@ function vSignals(){
   const wk=DG?DG.cur.week:null,cur=DG?DG.signals:[];
   const hist=[...new Set(D.signals.map(s=>s.week))].sort().reverse().filter(w=>w!==wk);
   return`<section class="panel sec" id="g-now"><h2>Сигналы недели ${wk?wkName(wk):''}</h2><p class="sub">Что бот заметил по правилам ниже и что советует сделать</p>
-  ${cur.length?`<div class="grid g-2">${cur.map(s=>`<div class="panel sig"><div>${sigPill(s.signal)} <b>${esc(s.p)}</b></div><p><b>${esc(s.value)}</b></p><p class="muted">${esc(s.rule)}</p><p>👉 ${esc(s.action)}</p></div>`).join('')}</div>`:'<div class="empty">Сигналов за неделю нет 👍</div>'}</section>
+  ${cur.length?`<div class="grid g-2">${cur.map(s=>`<div class="panel sig-card"><div>${sigPill(s.signal)} <b>${esc(s.p)}</b></div><p><b>${esc(s.value)}</b></p><p class="muted">${esc(s.rule)}</p><p class="act">👉 ${esc(s.action)}</p></div>`).join('')}</div>`:'<div class="empty">Сигналов за неделю нет 👍</div>'}</section>
   ${hist.length?`<section class="panel sec" id="g-hist"><h2>Прошлые недели</h2><div class="tbl"><table><thead><tr><th>Неделя</th><th>Площадка</th><th>Сигнал</th><th>Значение</th></tr></thead><tbody>
   ${hist.flatMap(w=>D.signals.filter(s=>s.week===w)).map(s=>`<tr><td class="nw">${wkName(s.week)}</td><td>${esc(s.p)}</td><td>${sigPill(s.signal)}</td><td>${esc(s.value)}</td></tr>`).join('')}</tbody></table></div></section>`:''}
   <section class="panel sec" id="g-rules"><h2>Правила сигналов</h2><p class="sub">Пороги предварительные (утверждены 26.10.2026), уточняются по опыту</p>
