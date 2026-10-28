@@ -383,6 +383,39 @@ tr.base td{background:var(--surface2)}
 .seg.wk{flex-wrap:nowrap;overflow-x:auto;max-width:100%;margin:0 0 16px;gap:2px}.seg.wk button{white-space:nowrap;flex:none}
 /* телефон: недели — сеткой по 3 в ряд (как другие переключатели), не строкой без отступов */
 @media (max-width:560px){.seg.wk{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;overflow:visible}.seg.wk button{padding:6px 2px}#f-hs{grid-template-columns:repeat(2,1fr);gap:3px}}
+
+/* Карта: площадки → куда приходят → заявка или почта → база (снимок, как карта сбора почт email-базы) */
+.fm-wrap{--gap:var(--muted);--ask:#5B5FB0;--ask-soft:#EEEFFA}
+:root[data-theme="dark"] .fm-wrap{--ask:#A9ACF2;--ask-soft:#25274A}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .fm-wrap{--ask:#A9ACF2;--ask-soft:#25274A}}
+.fm-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.fmap{display:block;width:100%;min-width:900px;height:auto}
+.fm-band{fill:var(--surface2)}.fm-band.alt{fill:var(--accent-soft)}
+.fm-bt{font:600 12.5px var(--display);fill:var(--navy);paint-order:stroke;stroke:var(--surface2);stroke-width:5px;stroke-linejoin:round}
+.fm-bt.alt{stroke:var(--accent-soft)}.fm-bt tspan{font:400 11.5px var(--body);fill:var(--muted)}
+.fm-node{cursor:pointer;transition:opacity .15s}.fm-node:focus{outline:none}.fm-node .box{stroke-width:1.5}
+.fm-node.fm-have .box{fill:var(--good-soft);stroke:var(--good)}
+.fm-node.fm-part .box{fill:var(--warn-soft);stroke:var(--warn)}
+.fm-node.fm-gap .box{fill:var(--surface);stroke:var(--gap);stroke-dasharray:5 4}
+.fm-node.fm-ask .box{fill:var(--ask-soft);stroke:var(--ask);stroke-dasharray:1.5 3;stroke-linecap:round}
+.fm-node:focus-visible .box,.fm-node.sel .box{stroke:var(--aqua);stroke-width:3;stroke-dasharray:none}
+.fm-l{font:500 12px var(--body);fill:var(--ink)}.fm-node.fm-gap .fm-l{fill:var(--ink2)}
+.fm-n{font:400 10.5px var(--body);fill:var(--muted)}.fm-cv{fill:var(--ink2);font-weight:500}.fm-bar{fill:var(--navy)}
+.fm-elabel{paint-order:stroke;stroke:var(--surface);stroke-width:3px}
+.fm-e{fill:none;stroke-width:1.8;opacity:.55;transition:opacity .15s}
+.fm-e.fm-have{stroke:var(--good)}.fm-e.fm-part{stroke:var(--warn)}
+.fm-e.fm-gap{stroke:var(--gap);stroke-dasharray:5 4}.fm-e.fm-ask{stroke:var(--ask);stroke-dasharray:1.5 3.5;stroke-linecap:round}
+.fmap.hl .fm-e{opacity:.07}.fmap.hl .fm-node,.fmap.hl .fm-elabel{opacity:.25}
+.fmap.hl .fm-e.on{opacity:1;stroke-width:2.6}.fmap.hl .fm-node.on{opacity:1}
+.fmap[data-f="gap"] .fm-e:is(.fm-have,.fm-part){opacity:.08}.fmap[data-f="gap"] .fm-node:is(.fm-have,.fm-part){opacity:.35}
+.fmap[data-f="have"] .fm-e:is(.fm-gap,.fm-ask){opacity:.06}.fmap[data-f="have"] .fm-node:is(.fm-gap,.fm-ask){opacity:.3}
+.fm-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink2);margin:6px 0 10px}
+.fm-legend span{display:inline-flex;align-items:center;gap:6px}.fm-legend i{width:16px;height:12px;border-radius:3px;border:1.5px solid}
+.fm-info{margin-top:12px;font-size:14px;display:flex;flex-direction:column;gap:6px;min-height:60px}
+.fm-info b{font:600 15px/1.3 var(--display);color:var(--navy)}
+.fm-info .paths{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:4px 18px;font-size:13px}
+.fm-info ul{margin:2px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
+.fm-st{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;border:1.5px solid;margin-left:6px;vertical-align:1px}
 </style>
 </head>
 <body>
@@ -536,7 +569,7 @@ function legend(items){return`<div class="legend">${items.map(([name,color,kind]
 let D=null;
 const S={tab:'week',pw:null,hs:'all'};
 try{Object.assign(S,JSON.parse(localStorage.getItem('dc-state')||'{}'))}catch(e){}
-const TABS=[['week','Неделя'],['plats','Площадки'],['signals','Сигналы'],['hyp','Гипотезы'],['tests','Тесты']];
+const TABS=[['week','Неделя'],['map','Карта'],['plats','Площадки'],['signals','Сигналы'],['hyp','Гипотезы'],['tests','Тесты']];
 function save(){try{localStorage.setItem('dc-state',JSON.stringify(S))}catch(e){}}
 const HIST=[];
 function go(tab){if(tab===S.tab)return;histPush();S.tab=tab;save();render();window.scrollTo({top:0});navState()}
@@ -623,6 +656,126 @@ function vWeek(){
 }
 
 /* ---------- Площадки ---------- */
+
+/* ---------- Карта: площадки → куда приходят → где оставляют заявку или почту → база ----------
+   Снимок за 01.01–25.10.2026 (посчитан 28.10, определения — systems/метрики.md, «Конверсия площадки в заявку»).
+   Та же карта, что на странице «Карта сбора почт» (projects/email-base/карта-сбора-почт). Цифры здесь не обновляются ночью. */
+const FMS={have:'Есть и работает',part:'Есть частично',gap:'Нужно сделать',ask:'Уточнить'};
+const FM={period:'01.01–25.10.2026',rows:[
+ {t:'1 · Площадки',sub:'где люди · визиты и доля в нажатия «Оформить»',n:[
+  ['direct','Прямые|заходы','187 тыс.|0,17% → заявка',187,'have','Люди, которые знают адрес сайта. 187 004 визита → 310 нажатий «Оформить» (0,17%). Почту у них сейчас не берём.'],
+  ['search','Поиск|без рекламы','182 тыс.|0,43% → заявка',182,'have','Поиск ведёт на страницы рейсов. 182 257 визитов → 792 нажатия «Оформить» (0,43%) — лучшая конверсия из площадок.'],
+  ['ads','Реклама','104 тыс.|0,14% → заявка',104,'have','Директ, VK Реклама, YouTube. 104 013 визитов → 147 нажатий «Оформить» (0,14%). Часть рекламы ведёт на лендинги вебинаров, там цель — регистрация.'],
+  ['social','Соцсети','10,5 тыс.|0,10% → заявка',10.5,'have','VK, Instagram. 10 492 визита → 10 нажатий «Оформить» (0,10%). 30% визитов из соцсетей — без меток.'],
+  ['zen','Дзен, сайты,|блогеры','14 тыс.|0,13% → заявка',14,'have','Переходы с сайтов 11 719 визитов → 18 нажатий; Дзен 2 277 → 0. Вместе 13 996 → 18 (0,13%). Лендинга с подарком под них нет.'],
+  ['ok','Одноклассники|и Пульс','39 визитов',0.039,'gap','Ядро ЦА 55+ сидит в Одноклассниках, а у нас там 39 визитов за 10 месяцев. Канала в Пульсе нет.'],
+  ['partner','Партнёры|офлайн','РГО, долголетие',0,'ask','«Московское долголетие», РГО: лекции и встречи с регистрацией по почте. Условия партнёрства не узнали.'],
+  ['msg','Мессенджеры','2,6 тыс.|0 заявок',2.6,'have','Telegram и MAX: 2 634 визита на сайт, 0 нажатий «Оформить». Люди из мессенджеров пишут в чат — это обращения Битрикс24. Бота подбора нет.'],
+  ['mindbox','Клиенты|в Mindbox','17,7 тыс.|0,17% → заявка',17.7,'have','≈26,9 тыс. подписанных в Mindbox; из рассылок 17 721 визит → 31 нажатие «Оформить» (0,17%).'],
+  ['cruise','Были|в круизе','~4,6 тыс. анкет',0,'have','Самые лояльные: анкеты на борту, письмо об отзыве.']]},
+ {t:'2 · Куда приходят',sub:'сайт, лендинги, каналы',n:[
+  ['site','Сайт|s-cruises.com','564 тыс. визитов',0,'have','Страницы рейсов и направлений: 564 434 визита (по домену входа). Заявку оставить можно, формы подписки нет.'],
+  ['land','Лендинги|go.s-cruises.com','18,5 тыс. визитов',0,'have','Лендинги вебинаров на Тильде: 18 548 визитов (по домену входа). Регистрация по почте работает.'],
+  ['leadform','Лид-форма|в объявлении','',0,'ask','Почта прямо в рекламе VK или Директа. Используются ли — в Метрике не видно.'],
+  ['call','Звонок, чат|Битрикс24','2 398 обращений',0,'have','Обращения Битрикс24 без дублей, ошибок и сотрудничества: звонки 1 252, Макс 762, Телеграм 384. До заявки в Букинге дошли 330 (13,8%): звонки 20,0%, Макс 7,0%, Телеграм 6,8%.'],
+  ['bot','Бот Telegram|или MAX','',0,'gap','«Подобрать круиз» за 3–4 вопроса. Пока нет.'],
+  ['mail','Наши письма','Mindbox, бронь, отзыв',0,'have','Рассылки Mindbox, письмо о брони, письмо об отзыве.'],
+  ['board','Борт|теплохода','',0,'have','Бумажные анкеты, каюта, ресторан, паспорт «Звёздной карты».']]},
+ {t:'3 · Где оставляют заявку или почту',sub:'точка сбора',n:[
+  ['lead','Заявка','1 618 с сайта',0,'have','Заявки с сайта в Букинге (создана на s-cruises.com, не удалена), все статусы: 1 618 — 0,28% от 587 705 визитов сайта. В Метрике за то же время 1 747 нажатий «Оформить» — на 8% больше. Ещё 330 заявок пришли через обращения Битрикс24.'],
+  ['webreg','Регистрация|на вебинар','1 297 участников',0,'have','Участники мероприятий (регистрация или лид Б24 без регистрации): «Северная сказка · 27.08» — 893, «Сербия · 22.09» — 404. Это 7,0% от визитов лендингов.'],
+  ['form','Форма подписки','поп-ап, подвал, квиз',0,'gap','Поп-ап с подарком, форма в подвале, квиз, лендинг с гидом, «Сообщить о цене». Ничего из этого нет.'],
+  ['pick','«Пришлю|подборку на почту»','менеджер или бот',0,'gap','Менеджер или бот предлагает подборку, согласие — полем в карточке Б24, дальше шлюз.'],
+  ['btn','Кнопка|«Хочу письма»','',0,'gap','Кнопка в рассылке Mindbox, письме о брони и письме об отзыве (оценкам 0–6 не предлагаем).'],
+  ['survey','Анкета, QR','',0,'part','Почты в анкетах есть, галочки согласия нет. QR на борту нет.']]},
+ {t:'4 · Куда попадает',sub:'одна база на каждую цель',n:[
+  ['b24','Букинг и Битрикс24','1 618 заявок · 67,6% оплачено',0,'have','Заявки с сайта — в Букинге, обращения — в Битрикс24. Из 1 618 заявок с сайта оплачено 1 093 (67,6%, статусы 21 и 30 на 28.10; октябрьские ещё дозревают).'],
+  ['dm','DashaMail — почты','~900 на 08.10, не обновлено',0,'part','Одна база «Созвездие — контакты»: только с согласием, отписался — навсегда в стоп-листе, у каждой почты метка source.']]}
+],edges:[
+ ['direct','site','have'],['direct','call','have'],['search','site','have'],['search','call','have'],
+ ['ads','site','have'],['ads','land','have'],['ads','leadform','ask'],
+ ['social','site','have'],['social','land','have'],['zen','site','have'],['zen','land','gap'],
+ ['ok','site','gap'],['ok','leadform','gap'],['partner','land','gap'],
+ ['msg','site','have'],['msg','bot','gap'],['mindbox','mail','have'],['mindbox','site','have'],['cruise','board','have'],['cruise','mail','have'],
+ ['site','lead','have','0,28% визитов'],['site','form','gap'],['land','webreg','have','7,0% визитов'],['land','form','gap'],['leadform','form','ask'],
+ ['call','lead','have','330 · 13,8%'],['call','pick','gap'],['bot','pick','gap'],['mail','btn','gap'],['board','survey','part'],
+ ['lead','b24','have','оплачено 67,6%'],['webreg','dm','part','выгрузка вручную'],['form','dm','gap'],['pick','dm','gap'],['btn','dm','gap'],['survey','dm','part'],
+ ['b24','dm','gap','почта из заявки — с согласием']
+]};
+let FMN=null;   // узлы и дороги после разметки: {N, out, inn}
+function fmLayout(){
+  const W=1080,BH=190,TOP=[W,960,800,560],BOT=470,N={},out={},inn={};let bands='',titles='',nodes='',edges='';
+  FM.rows.forEach((r,i)=>{
+    const y=i*BH,tw=TOP[i],bw=TOP[i+1]||BOT,h=i<3?BH:740-y;
+    bands+=`<path class="fm-band${i%2?' alt':''}" d="M${(W-tw)/2} ${y}H${(W+tw)/2}L${(W+bw)/2} ${y+h}H${(W-bw)/2}Z"/>`;
+    titles+=`<text class="fm-bt${i%2?' alt':''}" x="${(W-tw)/2+(i?22:14)}" y="${y+22}">${esc(r.t)}  <tspan>${esc(r.sub)}</tspan></text>`;
+    const inner=tw-(i?60:16),slot=inner/r.n.length,w=Math.min(slot-10,i===3?200:230),nh=i===0?88:62;
+    r.n.forEach((d,k)=>{
+      const [id,l,num,v,st,desc]=d,x=(W-inner)/2+slot*k+(slot-w)/2,yy=y+36,lines=l.split('|'),nums=num?num.split('|'):[];
+      N[id]={id,l:l.replace('|',' '),num:nums.join(' · '),st,desc,x,y:yy,w,h:nh,row:i};out[id]=[];inn[id]=[];
+      let ty=yy+(i===0?17:(nh-(lines.length*14+(nums.length?13:0)))/2+11),g='';
+      g+=`<rect class="box" x="${x}" y="${yy}" width="${w}" height="${nh}" rx="8"/>`;
+      lines.forEach(t=>{g+=`<text class="fm-l" x="${x+w/2}" y="${ty}" text-anchor="middle">${esc(t)}</text>`;ty+=14});
+      nums.forEach((t,j)=>{g+=`<text class="fm-n${j?' fm-cv':''}" x="${x+w/2}" y="${ty+1+j*13}" text-anchor="middle">${esc(t)}</text>`});
+      if(i===0&&v>0)g+=`<rect class="fm-bar" x="${x+8}" y="${yy+nh-11}" width="${Math.max(2,(w-16)*v/187)}" height="4" rx="1"/>`;
+      nodes+=`<g class="fm-node fm-${st}" tabindex="0" role="button" data-fm="${id}" aria-label="${esc(N[id].l+(num?', '+N[id].num:'')+'. '+FMS[st])}">${g}</g>`;
+    });
+  });
+  FM.edges.forEach(e=>{out[e[0]].push(e);inn[e[1]].push(e)});
+  const port=(list,id,key,e)=>{const l=list.filter(x=>N[x[0]].row!==N[x[1]].row).sort((a,b)=>N[a[key]].x-N[b[key]].x),k=l.indexOf(e),c=l.length;return N[id].x+N[id].w/2+(c>1?(k/(c-1)-.5)*N[id].w*.6:0)};
+  FM.edges.forEach((e,ei)=>{
+    const [a,b,st,lab]=e,A=N[a],B=N[b];let d,lx,ly,anchor='start';
+    if(A.row===B.row){const sx=A.x+A.w/2,tx=B.x+B.w/2,y=A.y+A.h;d=`M${sx} ${y}C${sx} ${y+46} ${tx} ${y+46} ${tx} ${y}`;lx=(sx+tx)/2;ly=y+50;anchor='middle'}
+    else{const sx=port(out[a],a,1,e),sy=A.y+A.h,tx=port(inn[b],b,0,e),ty=B.y,m=(ty-sy)*.55;d=`M${sx} ${sy}C${sx} ${sy+m} ${tx} ${ty-m} ${tx} ${ty}`;lx=(sx+tx)/2+6;ly=(sy+ty)/2}
+    edges+=`<path class="fm-e fm-${st}" data-e="${ei}" d="${d}"/>`+(lab?`<text class="fm-n fm-elabel" x="${lx}" y="${ly}" text-anchor="${anchor}">${esc(lab)}</text>`:'');
+  });
+  FMN={N,out,inn};
+  return`<svg class="fmap" id="fmap" viewBox="0 0 ${W} 740" role="img" aria-label="Карта-воронка: площадки, точки входа, сбор заявок и почт, базы"><g>${bands}</g><g>${edges}</g><g>${nodes}</g><g>${titles}</g></svg>`;
+}
+function vMap(){
+  const lg=[['have','Есть и работает'],['part','Есть частично'],['gap','Нужно сделать'],['ask','Уточнить']];
+  const sw={have:'background:var(--good-soft);border-color:var(--good)',part:'background:var(--warn-soft);border-color:var(--warn)',gap:'border-style:dashed;border-color:var(--gap)',ask:'background:var(--ask-soft);border-style:dotted;border-color:var(--ask)'};
+  const tr=(a,b,c,d,n)=>`<tr><td class="b">${a}${n?`<div class="note">${n}</div>`:''}</td><td class="r">${b}</td><td class="r">${c}</td><td class="r">${d}</td></tr>`;
+  return`<section class="panel sec fm-wrap" id="m-map"><h2>Карта: площадки → сайт → заявка → почта</h2>
+  <p class="sub">Снимок за ${FM.period} · Метрика, Букинг, Битрикс24 · нажмите на блок — подсветится путь</p>
+  <div class="fm-legend">${lg.map(([k,l])=>`<span><i style="${sw[k]}"></i>${l}</span>`).join('')}</div>
+  <div class="seg" id="fm-f" role="group" aria-label="Что показать"><button type="button" data-fmf="all" aria-pressed="true">Вся карта</button><button type="button" data-fmf="gap" aria-pressed="false">Пустые места</button><button type="button" data-fmf="have" aria-pressed="false">Что работает</button></div>
+  <div class="fm-scroll">${fmLayout()}</div>
+  <div class="fm-info" id="fm-info" aria-live="polite"><span class="note">Нажмите на блок — появится описание и откуда / куда из него идут дороги.</span></div></section>
+  <section class="panel sec" id="m-steps"><h2>Шаги воронки</h2><p class="sub">${FM.period}</p>
+  <div class="tbl"><table><thead><tr><th>Шаг</th><th class="r">Было</th><th class="r">Стало</th><th class="r">Конверсия</th></tr></thead><tbody>
+  ${tr('Визит сайта → заявка с сайта','587 705','1 618','0,28%','Метрика → Букинг')}
+  ${tr('Заявка с сайта → оплата','1 618','1 093','67,6%','статусы 21 и 30 на 28.10; октябрьские ещё дозревают')}
+  ${tr('Обращение Б24 → заявка в Букинге','2 398','330','13,8%','звонки 251 из 1 252 · Макс 53 из 762 · Телеграм 26 из 384')}
+  ${tr('Визит лендинга → участник вебинара','18 548','1 297','7,0%','«Северная сказка · 27.08» 893 + «Сербия · 22.09» 404')}
+  </tbody></table></div></section>
+  <section class="panel sec" id="m-src"><h2>Площадки: визит → нажатие «Оформить»</h2><p class="sub">Источник того визита, с которого человек пришёл · ${FM.period}</p>
+  <div class="tbl"><table><thead><tr><th>Площадка</th><th class="r">Визиты</th><th class="r">Нажали «Оформить»</th><th class="r">Конверсия</th></tr></thead><tbody>
+  ${tr('Поиск без рекламы','182 257','792','<b>0,43%</b>')}${tr('Прямые заходы','187 004','310','0,17%')}${tr('Рассылки','17 721','31','0,17%')}${tr('Переходы с сайтов','11 719','18','0,15%')}${tr('Реклама','104 013','147','0,14%')}${tr('Соцсети','10 492','10','0,10%')}${tr('Мессенджеры','2 634','0','0%')}${tr('Дзен','2 277','0','0%')}
+  ${tr('Внутренние переходы','66 159','439','0,66%','на карте нет: Метрика не нашла внешний источник')}
+  <tr class="tot"><td class="b">Все источники</td><td class="r b">584 299</td><td class="r b">1 747</td><td class="r b">0,30%</td></tr>
+  </tbody></table></div><p class="note">«Оформить» — нажатие кнопки, не заявка: нажатий на 8% больше, чем заявок в Букинге (1 747 и 1 618). Площадки сравнивать между собой, заявки по площадкам не считать. Здесь источник — этого визита; на вкладке «Площадки» — последнего перехода, поэтому цифры не совпадают.</p></section>
+`;
+}
+function fmBind(){
+  const svg=$('#fmap'),info=$('#fm-info');if(!svg||!FMN)return;const {N,out,inn}=FMN,dflt=info.innerHTML;let sel=null;
+  const walk=(id,dir,seen)=>{(dir?out:inn)[id].forEach(e=>{const n=e[dir?1:0];if(!seen.has(n)){seen.add(n);walk(n,dir,seen)}});return seen};
+  const light=id=>{svg.classList.toggle('hl',!!id);svg.querySelectorAll('.on').forEach(x=>x.classList.remove('on'));if(!id)return;
+    const up=walk(id,0,new Set([id])),dn=walk(id,1,new Set([id]));
+    svg.querySelectorAll('.fm-node').forEach(g=>{if(up.has(g.dataset.fm)||dn.has(g.dataset.fm))g.classList.add('on')});
+    svg.querySelectorAll('.fm-e').forEach(p=>{const e=FM.edges[+p.dataset.e];if((up.has(e[0])&&up.has(e[1]))||(dn.has(e[0])&&dn.has(e[1])))p.classList.add('on')})};
+  const col={have:'var(--good)',part:'var(--warn)',gap:'var(--gap)',ask:'var(--ask)'};
+  const li=(e,k)=>`<li>${esc(N[e[k]].l)} <span class="note">· ${FMS[e[2]].toLowerCase()}${e[3]?', '+esc(e[3]):''}</span></li>`;
+  const show=id=>{svg.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));sel=id;light(id);if(!id){info.innerHTML=dflt;return}
+    const n=N[id];svg.querySelector(`[data-fm="${id}"]`).classList.add('sel');
+    info.innerHTML=`<div><b>${esc(n.l)}</b><span class="fm-st" style="color:${col[n.st]};border-color:${col[n.st]}">${FMS[n.st]}</span></div><span>${esc(n.desc)}</span><div class="paths">`+
+      (inn[id].length?`<div>Откуда приходят<ul>${inn[id].map(e=>li(e,0)).join('')}</ul></div>`:'')+(out[id].length?`<div>Куда ведёт<ul>${out[id].map(e=>li(e,1)).join('')}</ul></div>`:'')+'</div>'};
+  svg.addEventListener('click',ev=>{const g=ev.target.closest('.fm-node');show(g&&g.dataset.fm!==sel?g.dataset.fm:null)});
+  svg.addEventListener('keydown',ev=>{const g=ev.target.closest('.fm-node');if(g&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();show(g.dataset.fm!==sel?g.dataset.fm:null)}});
+  svg.addEventListener('pointerover',ev=>{const g=ev.target.closest('.fm-node');if(g&&!sel&&ev.pointerType==='mouse')light(g.dataset.fm)});
+  svg.addEventListener('pointerout',ev=>{if(!sel&&ev.pointerType==='mouse'&&!ev.relatedTarget?.closest?.('.fm-node'))light(null)});
+  $('#fm-f').addEventListener('click',ev=>{const b=ev.target.closest('[data-fmf]');if(!b)return;$('#fm-f').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));svg.dataset.f=b.dataset.fmf});
+}
 function vPlats(){
   if(!PW.length)return'<div class="empty"><b>Площадок ещё нет.</b> Их пишет ночной сбор в лист «Площадки».</div>';
   const wk=S.pw,i=PW.indexOf(wk),pw=PW[i-1],of=w=>D.plats.filter(p=>p.week===w);
@@ -756,8 +909,9 @@ function renderTab(){
   hideTip();if(!D)return;
   $('#filters').innerHTML=filters();bindFilters();
   $('#view').onclick=viewClick;
-  const f={week:vWeek,plats:vPlats,signals:vSignals,hyp:vHyp,tests:vTests}[S.tab]||(S.tab='week',vWeek);
+  const f={week:vWeek,map:vMap,plats:vPlats,signals:vSignals,hyp:vHyp,tests:vTests}[S.tab]||(S.tab='week',vWeek);
   try{$('#view').innerHTML=f()}catch(err){$('#view').innerHTML=`<div class="err"><b>Ошибка вкладки.</b> ${esc(err.message)}</div>`;console.error(err)}
+  if(S.tab==='map')fmBind();
   const slot=$('#dq-slot');if(slot)slot.innerHTML=dqBlock();
 }
 function dqBlock(){
