@@ -415,6 +415,21 @@ tr.base td{background:var(--surface2)}
 .fm-info b{font:600 15px/1.3 var(--display);color:var(--navy)}
 .fm-info .paths{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:4px 18px;font-size:13px}
 .fm-info ul{margin:2px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
+/* телефон: карта — уровни списком карточек по 2 в ряд, без широкой схемы с прокруткой вбок */
+.fmap.fm-list{display:flex;flex-direction:column;min-width:0}
+.fm-row{background:var(--surface2);border-radius:12px;padding:10px}.fm-row.alt{background:var(--accent-soft)}
+.fm-rt{font:600 13.5px/1.3 var(--display);color:var(--navy);margin:0 0 8px}.fm-rt span{font:400 12px var(--body);color:var(--muted)}
+.fm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.fm-grid>.fm-node:last-child:nth-child(odd){grid-column:1/-1}
+.fm-list .fm-node{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:54px;padding:7px 8px;border:1.5px solid;border-radius:8px;text-align:center}
+.fm-list .fm-have{background:var(--good-soft);border-color:var(--good)}.fm-list .fm-part{background:var(--warn-soft);border-color:var(--warn)}
+.fm-list .fm-gap{background:var(--surface);border-color:var(--gap);border-style:dashed}.fm-list .fm-ask{background:var(--ask-soft);border-color:var(--ask);border-style:dotted}
+.fm-list .fm-node.sel,.fm-list .fm-node:focus-visible{box-shadow:0 0 0 2px var(--aqua);border-color:var(--aqua)}
+.fm-list .fm-l{font:500 13px/1.25 var(--body);color:var(--ink)}.fm-list .fm-gap .fm-l{color:var(--ink2)}
+.fm-list .fm-n{font:400 11.5px/1.3 var(--body);color:var(--muted)}.fm-list .fm-cv{color:var(--ink2);font-weight:500}
+.fm-list .fm-bar{display:block;height:4px;border-radius:1px;background:var(--navy);margin-top:4px}
+.fm-arrow{text-align:center;color:var(--muted);font-size:15px;line-height:1;padding:5px 0}
+.fm-list .fm-info{margin:8px 0 2px;padding:10px 12px;background:var(--surface);border-radius:10px}
 .fm-st{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;border:1.5px solid;margin-left:6px;vertical-align:1px}
 </style>
 </head>
@@ -732,6 +747,16 @@ function fmLayout(){
   FMN={N,out,inn};
   return`<svg class="fmap" id="fmap" viewBox="0 0 ${W} 740" role="img" aria-label="Карта-воронка: площадки, точки входа, сбор заявок и почт, базы"><g>${bands}</g><g>${edges}</g><g>${nodes}</g><g>${titles}</g></svg>`;
 }
+// телефон: те же блоки и дороги, но уровни списком; дороги видно подсветкой и в описании блока
+function fmList(){
+  const N={},out={},inn={};
+  const rows=FM.rows.map((r,i)=>`<div class="fm-row${i%2?' alt':''}"><div class="fm-rt">${esc(r.t)} <span>${esc(r.sub)}</span></div><div class="fm-grid">${r.n.map(([id,l,num,v,st,desc])=>{
+    const nums=num?num.split('|'):[];N[id]={id,l:l.replace('|',' '),num:nums.join(' · '),st,desc,row:i};out[id]=[];inn[id]=[];
+    return`<div class="fm-node fm-${st}" tabindex="0" role="button" data-fm="${id}" aria-label="${esc(N[id].l+(num?', '+N[id].num:'')+'. '+FMS[st])}"><span class="fm-l">${esc(N[id].l)}</span>${nums.map((t,j)=>`<span class="fm-n${j?' fm-cv':''}">${esc(t)}</span>`).join('')}${i===0&&v>0?`<i class="fm-bar" style="width:${Math.max(2,100*v/187)}%"></i>`:''}</div>`}).join('')}</div></div>`);
+  FM.edges.forEach(e=>{out[e[0]].push(e);inn[e[1]].push(e)});
+  FMN={N,out,inn};
+  return`<div class="fmap fm-list" id="fmap" role="group" aria-label="Карта-воронка: площадки, точки входа, сбор заявок и почт, базы">${rows.join('<div class="fm-arrow" aria-hidden="true">↓</div>')}</div>`;
+}
 function vMap(){
   const lg=[['have','Есть и работает'],['part','Есть частично'],['gap','Нужно сделать'],['ask','Уточнить']];
   const sw={have:'background:var(--good-soft);border-color:var(--good)',part:'background:var(--warn-soft);border-color:var(--warn)',gap:'border-style:dashed;border-color:var(--gap)',ask:'background:var(--ask-soft);border-style:dotted;border-color:var(--ask)'};
@@ -740,7 +765,7 @@ function vMap(){
   <p class="sub">Снимок за ${FM.period} · Метрика, Букинг, Битрикс24 · нажмите на блок — подсветится путь</p>
   <div class="fm-legend">${lg.map(([k,l])=>`<span><i style="${sw[k]}"></i>${l}</span>`).join('')}</div>
   <div class="seg" id="fm-f" role="group" aria-label="Что показать"><button type="button" data-fmf="all" aria-pressed="true">Вся карта</button><button type="button" data-fmf="gap" aria-pressed="false">Пустые места</button><button type="button" data-fmf="have" aria-pressed="false">Что работает</button></div>
-  <div class="fm-scroll">${fmLayout()}</div>
+  ${innerWidth<700?fmList():`<div class="fm-scroll">${fmLayout()}</div>`}
   <div class="fm-info" id="fm-info" aria-live="polite"><span class="note">Нажмите на блок — появится описание и откуда / куда из него идут дороги.</span></div></section>
   <section class="panel sec" id="m-steps"><h2>Шаги воронки</h2><p class="sub">${FM.period}</p>
   <div class="tbl"><table><thead><tr><th>Шаг</th><th class="r">Было</th><th class="r">Стало</th><th class="r">Конверсия</th></tr></thead><tbody>
@@ -766,11 +791,11 @@ function fmBind(){
     svg.querySelectorAll('.fm-e').forEach(p=>{const e=FM.edges[+p.dataset.e];if((up.has(e[0])&&up.has(e[1]))||(dn.has(e[0])&&dn.has(e[1])))p.classList.add('on')})};
   const col={have:'var(--good)',part:'var(--warn)',gap:'var(--gap)',ask:'var(--ask)'};
   const li=(e,k)=>`<li>${esc(N[e[k]].l)} <span class="note">· ${FMS[e[2]].toLowerCase()}${e[3]?', '+esc(e[3]):''}</span></li>`;
-  const show=id=>{svg.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));sel=id;light(id);if(!id){info.innerHTML=dflt;return}
-    const n=N[id];svg.querySelector(`[data-fm="${id}"]`).classList.add('sel');
+  const show=id=>{svg.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));sel=id;light(id);if(!id){info.innerHTML=dflt;if(svg.contains(info))svg.after(info);return}
+    const n=N[id],g=svg.querySelector(`[data-fm="${id}"]`);g.classList.add('sel');if(svg.classList.contains('fm-list'))g.closest('.fm-row').append(info);
     info.innerHTML=`<div><b>${esc(n.l)}</b><span class="fm-st" style="color:${col[n.st]};border-color:${col[n.st]}">${FMS[n.st]}</span></div><span>${esc(n.desc)}</span><div class="paths">`+
       (inn[id].length?`<div>Откуда приходят<ul>${inn[id].map(e=>li(e,0)).join('')}</ul></div>`:'')+(out[id].length?`<div>Куда ведёт<ul>${out[id].map(e=>li(e,1)).join('')}</ul></div>`:'')+'</div>'};
-  svg.addEventListener('click',ev=>{const g=ev.target.closest('.fm-node');show(g&&g.dataset.fm!==sel?g.dataset.fm:null)});
+  svg.addEventListener('click',ev=>{if(ev.target.closest('#fm-info'))return;const g=ev.target.closest('.fm-node');show(g&&g.dataset.fm!==sel?g.dataset.fm:null)});
   svg.addEventListener('keydown',ev=>{const g=ev.target.closest('.fm-node');if(g&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();show(g.dataset.fm!==sel?g.dataset.fm:null)}});
   svg.addEventListener('pointerover',ev=>{const g=ev.target.closest('.fm-node');if(g&&!sel&&ev.pointerType==='mouse')light(g.dataset.fm)});
   svg.addEventListener('pointerout',ev=>{if(!sel&&ev.pointerType==='mouse'&&!ev.relatedTarget?.closest?.('.fm-node'))light(null)});
