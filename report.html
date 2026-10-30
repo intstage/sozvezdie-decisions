@@ -649,22 +649,22 @@ function vWeek(){
   const verdict=`Неделя <b>${wkName(w.week)}</b>: с наших размещений пришли <b>${fmt(w.m2)}</b> новых посетителей (к базе ${delta(w.m2,b.m2)}), `+
     `новых людей с заявкой сайта — <b>${fmt(w.newPeople)}</b>, новых покупателей — <b>${fmt(w.newPayers)}</b>. `+(nS?`<a href="#" data-go="@signals">${nS} ${rw(nS)}</a> — что делать, на вкладке «Сигналы».`:'Сигналов нет.');
   const L=W.slice(-12),lab=L.map(x=>wkName(x.week)),tk=i=>dm(L[i].week);
-  const lc=lineChart('c-m12',{labels:lab,series:[{name:'М1 Визиты с размещений',color:cssv('--s1'),values:L.map(x=>x.m1),area:true},{name:'М2 Новые посетители',color:cssv('--s2'),values:L.map(x=>x.m2)}],ticks:tk,height:240});
+  const lc=lineChart('c-m12',{labels:lab,series:[{name:'Визиты с размещений',color:cssv('--s1'),values:L.map(x=>x.m1),area:true},{name:'Новые посетители',color:cssv('--s2'),values:L.map(x=>x.m2)}],ticks:tk,height:240});
   const b5=barChart('c-m5',{bars:L.map(x=>({label:wkName(x.week),value:x.people||0,inner:x.newPeople||0,innerColor:cssv('--s1'),color:cssv('--muted'),tip:`новые: <b>${fmt(x.newPeople)}</b> (${pct(share(x.newPeople,x.people),0)})`})),color:cssv('--muted'),ticks:tk,name:'Люди с заявкой сайта',height:200});
   const b6=barChart('c-m6',{bars:L.map(x=>({label:wkName(x.week),value:x.payers||0,inner:x.newPayers||0,innerColor:cssv('--s2'),color:cssv('--muted'),tip:`новые: <b>${fmt(x.newPayers)}</b> (${pct(share(x.newPayers,x.payers),0)})`})),color:cssv('--muted'),ticks:tk,name:'Покупатели',height:200});
   return`<p class="verdict">${verdict}</p>${kpis([
-    ['М1 Визиты с наших размещений',fmt(w.m1),foot('m1'),'@plats',delta(w.m1,p&&p.m1),`все визиты сайта — ${fmt(w.all)}`],
-    ['М2 Новые посетители',fmt(w.m2),foot('m2'),'@plats',delta(w.m2,p&&p.m2),`новые — ${pct(share(w.m2,w.m1),0)} от визитов`],
-    ['М5 Новые люди с заявкой',`${fmt(w.newPeople)}<small>из ${fmt(w.people)}</small>`,foot('newPeople'),'#w-m5','',`доля новых ${pct(share(w.newPeople,w.people),0)}`],
-    ['М6 Новые покупатели',`${fmt(w.newPayers)}<small>из ${fmt(w.payers)}</small>`,foot('newPayers'),'#w-m6','',`доля новых ${pct(share(w.newPayers,w.payers),0)}`],
+    ['Визиты с наших размещений',fmt(w.m1),foot('m1'),'@plats',delta(w.m1,p&&p.m1),`все визиты сайта — ${fmt(w.all)}`],
+    ['Новые посетители',fmt(w.m2),foot('m2'),'@plats',delta(w.m2,p&&p.m2),`новые — ${pct(share(w.m2,w.m1),0)} от визитов`],
+    ['Новые люди с заявкой',`${fmt(w.newPeople)}<small>из ${fmt(w.people)}</small>`,foot('newPeople'),'#w-m5','',`доля новых ${pct(share(w.newPeople,w.people),0)}`],
+    ['Новые покупатели',`${fmt(w.newPayers)}<small>из ${fmt(w.payers)}</small>`,foot('newPayers'),'#w-m6','',`доля новых ${pct(share(w.newPayers,w.payers),0)}`],
   ])}
-  <section class="panel sec" id="w-m12"><h2>Визиты и новые посетители с наших размещений</h2><p class="sub">Последние ${L.length} недель, пн–вс · Яндекс Метрика</p>${legend([['М1 Визиты',cssv('--s1')],['М2 Новые посетители',cssv('--s2')]])}${lc}</section>
+  <section class="panel sec" id="w-m12"><h2>Визиты и новые посетители с наших размещений</h2><p class="sub">Последние ${L.length} недель, пн–вс · Яндекс Метрика</p>${legend([['Визиты',cssv('--s1')],['Новые посетители',cssv('--s2')]])}${lc}</section>
   <div class="grid g-2">
-  <section class="panel sec" id="w-m5"><h2>М5 Люди с заявкой сайта</h2><p class="sub">Цветом — новые: до этой заявки заявок в Букинге не было</p>${legend([['новые',cssv('--s1')],['уже были',cssv('--muted')]])}${b5}</section>
-  <section class="panel sec" id="w-m6"><h2>М6 Покупатели</h2><p class="sub">Частные лица с оплатой заявки Созвездия; цветом — первая оплата</p>${legend([['новые',cssv('--s2')],['уже покупали',cssv('--muted')]])}${b6}</section>
+  <section class="panel sec" id="w-m5"><h2>Люди с заявкой сайта</h2><p class="sub">Цветом — новые: до этой заявки заявок в Букинге не было</p>${legend([['новые',cssv('--s1')],['уже были',cssv('--muted')]])}${b5}</section>
+  <section class="panel sec" id="w-m6"><h2>Покупатели</h2><p class="sub">Частные лица с оплатой заявки Созвездия; цветом — первая оплата</p>${legend([['новые',cssv('--s2')],['уже покупали',cssv('--muted')]])}${b6}</section>
   </div>
   <section class="panel sec" id="w-table"><h2>Все недели</h2><p class="sub">База «до» — среднее недель ${esc(bn)}; строки базы отмечены</p>
-  <div class="tbl"><table><thead><tr><th>Неделя</th><th class="r">М1 Визиты</th><th class="r">М2 Новые</th><th class="r">М5 Люди с заявкой</th><th class="r">новые</th><th class="r">доля</th><th class="r">М6 Покупатели</th><th class="r">новые</th><th class="r">доля</th><th class="r">Все визиты сайта</th></tr></thead><tbody>
+  <div class="tbl"><table><thead><tr><th>Неделя</th><th class="r">Визиты</th><th class="r">Новые посетители</th><th class="r">Люди с заявкой</th><th class="r">новые</th><th class="r">доля</th><th class="r">Покупатели</th><th class="r">новые</th><th class="r">доля</th><th class="r">Все визиты сайта</th></tr></thead><tbody>
   ${[...W].reverse().map(x=>{const isB=x.week>=D.base[0]&&x.week<=D.base[1];return`<tr${isB?' class="base"':''}><td class="nw">${wkName(x.week)}${isB?' <span class="muted">база</span>':''}</td><td class="r">${fmt(x.m1)}</td><td class="r">${fmt(x.m2)}</td><td class="r">${fmt(x.people)}</td><td class="r">${fmt(x.newPeople)}</td><td class="r">${pct(share(x.newPeople,x.people),0)}</td><td class="r">${fmt(x.payers)}</td><td class="r">${fmt(x.newPayers)}</td><td class="r">${pct(share(x.newPayers,x.payers),0)}</td><td class="r">${fmt(x.all)}</td></tr>`}).join('')}
   <tr class="tot"><td class="b">База «до»</td>${['m1','m2','people','newPeople'].map(k=>`<td class="r b">${fmt(b[k])}</td>`).join('')}<td class="r">${pct(share(b.newPeople,b.people),0)}</td>${['payers','newPayers'].map(k=>`<td class="r b">${fmt(b[k])}</td>`).join('')}<td class="r">${pct(share(b.newPayers,b.payers),0)}</td><td></td></tr>
   </tbody></table></div><p class="note">Последние недели ночной сбор пересчитывает ещё 3 недели подряд: поздние визиты и оплаты дописываются.</p></section>`;
@@ -813,9 +813,9 @@ function vPlats(){
   const mx=Math.max(1,...names.flatMap(n=>last.map(w=>vis(w,n)||0)));
   return`<div class="seg wk" id="f-pw" role="group" aria-label="Неделя">${PW.slice(-8).map(w=>`<button type="button" data-pick="pw:${w}" aria-pressed="${w===wk}">${wkName(w)}</button>`).join('')}</div>
   <section class="panel sec" id="p-table"><h2>Площадки · неделя ${wkName(wk)}</h2><p class="sub">Визиты с наших размещений по площадке последнего перехода · Яндекс Метрика</p>
-  <div class="tbl"><table><thead><tr><th>Площадка</th><th class="r">М1 Визиты</th><th class="r">К прошлой неделе</th><th class="r">Посетители</th><th class="r">М2 Новые</th><th class="r">Доля новых</th><th class="r">Без utm_campaign</th><th>Сигналы</th></tr></thead><tbody>
+  <div class="tbl"><table><thead><tr><th>Площадка</th><th class="r">Визиты</th><th class="r">К прошлой неделе</th><th class="r">Посетители</th><th class="r">Новые посетители</th><th class="r">Доля новых</th><th class="r">Без utm_campaign</th><th>Сигналы</th></tr></thead><tbody>
   ${L.map(p=>`<tr><td class="b">${esc(p.p)}</td><td class="r">${fmt(p.visits)}</td><td class="r">${P[p.p]?delta(p.visits,P[p.p].visits):'<span class="delta eq">—</span>'}</td><td class="r">${fmt(p.users)}</td><td class="r">${fmt(p.newUsers)}</td><td class="r">${pct(share(p.newUsers,p.users),0)}</td><td class="r">${pct(share(p.noUtm,p.visits),0)}</td><td>${(sg[p.p]||[]).map(sigPill).join(' ')}</td></tr>`).join('')}
-  <tr class="tot"><td class="b">Итого = М1</td><td class="r b">${fmt(tv)}</td><td></td><td></td><td class="r b">${fmt(tn)}</td><td></td><td></td><td></td></tr>
+  <tr class="tot"><td class="b">Итого</td><td class="r b">${fmt(tv)}</td><td></td><td></td><td class="r b">${fmt(tn)}</td><td></td><td></td><td></td></tr>
   </tbody></table></div><p class="note">«Без utm_campaign» у «Сайтов, блогеров» и «Дзена» — нормально: ссылки там ставим не мы. Захват почты (подписки по площадке) появится с базой DashaMail и метками (#109).</p></section>
   <section class="panel sec" id="p-heat"><h2>Визиты по площадкам за ${last.length} недель</h2><p class="sub">Цвет — от наибольшего значения в таблице</p>
   <div class="tbl"><table class="heat"><thead><tr><th>Площадка</th>${last.map(w=>`<th class="r">${dm(w)}</th>`).join('')}</tr></thead><tbody>
@@ -836,7 +836,7 @@ function vSignals(){
   <tr><td>${sigPill('Трафик без захвата')}</td><td>300+ визитов площадки за неделю, подписок 0 (пока база DashaMail не запущена — у всех площадок)</td><td>поставить поп-ап или лендинг с подарком для площадки</td></tr>
   <tr><td>${sigPill('Без меток')}</td><td>больше 10% визитов площадки без utm_campaign, от 50 визитов; кроме «Сайтов, блогеров» и «Дзена»</td><td>поправить ссылки по справочнику UTM (#109)</td></tr>
   <tr><td>${sigPill('Реклама стоит')}</td><td>визиты площадки упали больше чем вдвое к среднему за 4 недели (среднее от 50)</td><td>спросить владельца канала, почему площадка просела</td></tr>
-  <tr><td>${sigPill('Новые не доходят до заявки')}</td><td>М2 растёт 2 недели подряд, а М5 нет</td><td>проверить страницу входа и форму заявки</td></tr>
+  <tr><td>${sigPill('Новые не доходят до заявки')}</td><td>Новые посетители растут 2 недели подряд, а новые люди с заявкой — нет</td><td>проверить страницу входа и форму заявки</td></tr>
   </tbody></table></div></section>`;
 }
 
@@ -945,7 +945,7 @@ function dqBlock(){
   if(last){const h=(Date.now()-new Date(last.at).getTime())/36e5;W2.push(h>30?{level:'warn',text:`Недели обновлены ${Math.round(h/24)} дн назад — ночное обновление не сработало?`}:{level:'ok',text:`Недели обновлены ${last.at.replace('T',' ')} (${last.what}), недели ${last.weeks}`});
     if(/расхождения/.test(last.result))W2.push({level:'info',text:'Сверка Метрики: '+last.result.replace(/^готово;\s*/,'')})}
   else W2.push({level:'warn',text:'Ночной сбор ещё не записал ни одной недели'});
-  W2.push({level:'info',text:'Пока не считаются: М3 и М4 (подписки — после базы DashaMail и меток #109), М7 (подписчик → покупатель), М8 (цена — после доступа к расходам #15)'});
+  W2.push({level:'info',text:'Пока не считаются: подписки (после базы DashaMail и меток #109), переход подписчика в покупатели, цена привлечения (после доступа к расходам #15)'});
   W2.push({level:'info',text:'«Оформить» в Метрике — нажатие кнопки, не заявка: заявки и оплаты — только из Букинга'});
   const lv={bad:0,warn:1,ok:2,info:3};
   return`<details class="panel dq"><summary>Качество данных · ${W2.length}</summary><ul>${W2.sort((a,b)=>lv[a.level]-lv[b.level]).map(w=>`<li class="${w.level}"><span>${esc(w.text)}</span></li>`).join('')}</ul></details>`;
@@ -1059,10 +1059,10 @@ applyTheme(theme);
 document.querySelectorAll('#btn-theme,.js-theme').forEach(b=>b.onclick=e=>{if(e.detail)e.currentTarget.blur();theme=theme==='dark'?'light':'dark';try{localStorage.setItem('dc-theme',theme)}catch(err){}applyTheme(theme);render()});
 $('#method').innerHTML='<div id="dq-slot"></div><p id="period" class="ref-info" hidden></p><h3>Как считается</h3><dl>'+[
   ['Неделя','Понедельник–воскресенье по Москве.','Ночной сбор каждый день около 5:10 МСК пересчитывает 3 последние полные недели: поздние визиты и оплаты за них ещё дописываются. Текущая неделя не показывается, пока не закончилась.'],
-  ['М1 Визиты с наших размещений','Сколько визитов на сайт привели наши размещения.','Визиты на s-cruises.com и go.s-cruises.com (без dev) с рекламы, рассылок, соцсетей, мессенджеров, чужих сайтов и рекомендаций (Дзен); площадка — по последнему переходу. Яндекс Метрика, счётчик 56423212.'],
-  ['М2 Новые посетители','Сколько людей пришло на сайт впервые.','Посетители, у которых это первый визит на сайт, с тех же площадок. «Новый» = новая кука: человек с другого устройства тоже новый.'],
-  ['М5 Новые люди с заявкой','Новые люди, оставившие заявку на сайте.','Аккаунт Букинга с заявкой сайта за неделю, у которого до первой заявки сайта этой недели заявок не было. «Из» — все люди с заявкой сайта за неделю.'],
-  ['М6 Новые покупатели','Кто впервые купил круиз Созвездия.','Частные лица с оплатой заявки Созвездия (статусы «Оплачено», «Предоплата»); неделя — по первой оплате заявки; новый — раньше оплаченных заявок Созвездия не было. «Из» — все оплатившие за неделю.'],
+  ['Визиты с наших размещений','Сколько визитов на сайт привели наши размещения.','Визиты на s-cruises.com и go.s-cruises.com (без dev) с рекламы, рассылок, соцсетей, мессенджеров, чужих сайтов и рекомендаций (Дзен); площадка — по последнему переходу. Яндекс Метрика, счётчик 56423212.'],
+  ['Новые посетители','Сколько людей пришло на сайт впервые.','Посетители, у которых это первый визит на сайт, с тех же площадок. «Новый» = новая кука: человек с другого устройства тоже новый.'],
+  ['Новые люди с заявкой','Новые люди, оставившие заявку на сайте.','Аккаунт Букинга с заявкой сайта за неделю, у которого до первой заявки сайта этой недели заявок не было. «Из» — все люди с заявкой сайта за неделю.'],
+  ['Новые покупатели','Кто впервые купил круиз Созвездия.','Частные лица с оплатой заявки Созвездия (статусы «Оплачено», «Предоплата»); неделя — по первой оплате заявки; новый — раньше оплаченных заявок Созвездия не было. «Из» — все оплатившие за неделю.'],
   ['База «до»','С чем сравниваем.','Среднее недель 14.09–04.10 (до запуска мер по новой аудитории). Ещё сравнение — с прошлой неделей и со средним 4 недель перед последней.'],
   ['Сигналы','Что бот заметил и что советует.','Правила и пороги — на вкладке «Сигналы»; считаются по последней полной неделе после ночного сбора.'],
   ['Гипотезы и ICE','Что пробовать дальше.','Реестр — лист «Гипотезы» таблицы «Решения Созвездия». ICE = влияние × уверенность × простота, каждое от 1 до 10; оценки — черновик, проверяются с Романом.'],
