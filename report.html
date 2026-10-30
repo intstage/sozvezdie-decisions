@@ -483,11 +483,12 @@ const monName=m=>MON[+m.slice(5,7)-1]+' '+m.slice(0,4);
 const monShort=m=>MON_S[+m.slice(5,7)-1]+' '+m.slice(2,4);
 const dShort=d=>+d.slice(8,10)+' '+MON_S[+d.slice(5,7)-1];
 const sum=a=>a.reduce((x,y)=>x+y,0);
+const plural=(n,f)=>f[n%10===1&&n%100!==11?0:n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?1:2];
 const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 function delta(cur,prev,{inverse=false,asPct=true}={}){
   if(cur==null||prev==null||!prev)return'<span class="delta eq">нет сравнения</span>';
   const ch=(cur-prev)/prev,good=inverse?ch<0:ch>0,cls=Math.abs(ch)<0.005?'eq':good?'up':'dn';
-  return`<span class="delta ${cls}">${ch>0?'▲':ch<0?'▼':'='} ${fmt(Math.abs(ch)*100,0)}%</span>`;
+  return cls==='eq'?'<span class="delta eq">0%</span>':`<span class="delta ${cls}">${ch>0?'▲':'▼'} ${fmt(Math.abs(ch)*100,0)}%</span>`;
 }
 function showTip(html,ev){tip.innerHTML=html;tip.hidden=false;const z=parseFloat(document.documentElement.style.zoom)||1;
   const x=ev.clientX/z,y=ev.clientY/z,w=tip.offsetWidth,h=tip.offsetHeight,touch=ev.pointerType&&ev.pointerType!=='mouse';
@@ -635,7 +636,7 @@ const hPill=s=>`<span class="pill ${HST[s]||'l-na'}">${esc(s||'Идея')}</span
 function filters(){return''}
 function navFilters(){return''}
 function bindFilters(){}
-function pp(a,b){if(a==null||b==null)return'<span class="delta eq">нет сравнения</span>';const d=(a-b)*100;return`<span class="delta ${Math.abs(d)<0.5?'eq':d>0?'up':'dn'}">${d>0?'▲':d<0?'▼':'='} ${fmt(Math.abs(d),0)} п.п.</span>`}
+function pp(a,b){if(a==null||b==null)return'<span class="delta eq">нет сравнения</span>';const d=(a-b)*100;return Math.abs(d)<0.5?'<span class="delta eq">0 п.п.</span>':`<span class="delta ${d>0?'up':'dn'}">${d>0?'▲':'▼'} ${fmt(Math.abs(d),0)} п.п.</span>`}
 // карточка: [подпись, цифра, строка, переход, отклонение рядом с цифрой, серая строка]
 function kpis(list){return`<div class="grid g-kpi">${list.map(([l,v,f,g,d,m])=>`<div class="panel kpi${g?' go':''}"${g?` data-go="${g}"`:''}><div class="lbl">${l}</div><div class="val">${v}${d?`<small>${d}</small>`:''}</div><div class="foot"><span>${f}</span></div>${m?`<div class="foot"><span class="muted">${m}</span></div>`:''}</div>`).join('')}</div>`}
 const noWeeks=()=>'<div class="empty"><b>Недель ещё нет.</b> Ночной сбор запишет их в лист «Недели» — или меню таблицы «Решения → Обновить последние недели сейчас».</div>';
@@ -658,7 +659,7 @@ function vWeek(){
     ['Новые люди с заявкой',`${fmt(w.newPeople)}<small>из ${fmt(w.people)}</small>`,foot('newPeople'),'#w-m5','',`доля новых ${pct(share(w.newPeople,w.people),0)}`],
     ['Новые покупатели',`${fmt(w.newPayers)}<small>из ${fmt(w.payers)}</small>`,foot('newPayers'),'#w-m6','',`доля новых ${pct(share(w.newPayers,w.payers),0)}`],
   ])}
-  <section class="panel sec" id="w-m12"><h2>Визиты и новые посетители с наших размещений</h2><p class="sub">Последние ${L.length} недель, пн–вс · Яндекс Метрика</p>${legend([['Визиты',cssv('--s1')],['Новые посетители',cssv('--s2')]])}${lc}</section>
+  <section class="panel sec" id="w-m12"><h2>Визиты и новые посетители с наших размещений</h2><p class="sub">Последние ${L.length} ${plural(L.length,['неделя','недели','недель'])}, пн–вс · Яндекс Метрика</p>${legend([['Визиты',cssv('--s1')],['Новые посетители',cssv('--s2')]])}${lc}</section>
   <div class="grid g-2">
   <section class="panel sec" id="w-m5"><h2>Люди с заявкой сайта</h2><p class="sub">Цветом — новые: до этой заявки заявок в Букинге не было</p>${legend([['новые',cssv('--s1')],['уже были',cssv('--muted')]])}${b5}</section>
   <section class="panel sec" id="w-m6"><h2>Покупатели</h2><p class="sub">Частные лица с оплатой заявки Созвездия; цветом — первая оплата</p>${legend([['новые',cssv('--s2')],['уже покупали',cssv('--muted')]])}${b6}</section>
@@ -817,7 +818,7 @@ function vPlats(){
   ${L.map(p=>`<tr><td class="b">${esc(p.p)}</td><td class="r">${fmt(p.visits)}</td><td class="r">${P[p.p]?delta(p.visits,P[p.p].visits):'<span class="delta eq">—</span>'}</td><td class="r">${fmt(p.users)}</td><td class="r">${fmt(p.newUsers)}</td><td class="r">${pct(share(p.newUsers,p.users),0)}</td><td class="r">${pct(share(p.noUtm,p.visits),0)}</td><td>${(sg[p.p]||[]).map(sigPill).join(' ')}</td></tr>`).join('')}
   <tr class="tot"><td class="b">Итого</td><td class="r b">${fmt(tv)}</td><td></td><td></td><td class="r b">${fmt(tn)}</td><td></td><td></td><td></td></tr>
   </tbody></table></div><p class="note">«Без utm_campaign» у «Сайтов, блогеров» и «Дзена» — нормально: ссылки там ставим не мы. Захват почты (подписки по площадке) появится с базой DashaMail и метками (#109).</p></section>
-  <section class="panel sec" id="p-heat"><h2>Визиты по площадкам за ${last.length} недель</h2><p class="sub">Цвет — от наибольшего значения в таблице</p>
+  <section class="panel sec" id="p-heat"><h2>Визиты по площадкам за ${last.length} ${plural(last.length,['неделю','недели','недель'])}</h2><p class="sub">Цвет — от наибольшего значения в таблице</p>
   <div class="tbl"><table class="heat"><thead><tr><th>Площадка</th>${last.map(w=>`<th class="r">${dm(w)}</th>`).join('')}</tr></thead><tbody>
   ${names.map(n=>`<tr><td class="b">${esc(n)}</td>${last.map(w=>{const v=vis(w,n);return`<td class="hm" style="background:${v==null?'transparent':CMIX?`color-mix(in srgb,var(--s1) ${Math.round(8+v/mx*55)}%,transparent)`:'var(--surface2)'}">${v==null?'—':fmt(v)}</td>`}).join('')}</tr>`).join('')}
   </tbody></table></div></section>`;
@@ -984,7 +985,7 @@ function load(force){
     const str=typeof res==='string'?res:JSON.stringify(res);
     if(!cached){reset();fresh=true;lcPut({v:ver||'',d:str});if(str===LC_SHOWN&&D){stamp(false);return}}
     try{D=JSON.parse(str);prep();LC_SHOWN=str;stamp(cached);
-    const pe=$('#period');pe.hidden=false;pe.innerHTML=`<b>Объём данных.</b> ${fmt(W.length)} недель${W.length?` (${wkName(W[0].week)} … ${wkName(W[W.length-1].week)})`:''} · ${fmt(D.hyp.length)} гипотез · ${fmt(D.tests.length)} тестов`;
+    const pe=$('#period');pe.hidden=false;pe.innerHTML=`<b>Объём данных.</b> ${fmt(W.length)} ${plural(W.length,['неделя','недели','недель'])}${W.length?` (${wkName(W[0].week)} … ${wkName(W[W.length-1].week)})`:''} · ${fmt(D.hyp.length)} гипотез · ${fmt(D.tests.length)} тестов`;
     if(!applyGo())render()}catch(e){if(cached){D=null;LC_SHOWN='';lcPut(null);return}fail(e);console.error(e)}};
   const stamp=wait=>{const g=new Date(D.data_at||D.generated_at),p2=n=>String(n).padStart(2,'0');
     $('#stamp').textContent=`Данные на ${p2(g.getDate())}.${p2(g.getMonth()+1)}.${g.getFullYear()} ${p2(g.getHours())}:${p2(g.getMinutes())}`+(wait?' · обновляю…':'')};
